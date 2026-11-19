@@ -24,6 +24,10 @@ import zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 VERSION = "3.4.0"  # única fuente del número de versión: al compilar se copia a README, la página y package.json
+# Dirección pública del sitio (docs/). Al pasar al dominio propio basta con cambiarla aquí, por ejemplo a
+# "https://navestigio.com/", y compilar: se actualizan la URL canónica, Open Graph, los datos estructurados,
+# hreflang, sitemap.xml y robots.txt, y se crea docs/CNAME para GitHub Pages.
+SITE_URL = "https://navestigio.github.io/navestigio/"
 SQLJS_VERSION = "1.15.2"
 # Integridad publicada por npm para sql.js@1.15.2 (campo dist.integrity del registro).
 SQLJS_INTEGRITY = "sha512-ZmMYFsZPZWDKIJUh3A5rdnpRV3hB/r7AijwAzSzLnfv/9CSx4obUmDtA8brAjWJWjGtUVh43nIEJ+6nl6HuOUg=="
@@ -147,6 +151,41 @@ def sync_version():
             print(f"[+] {'/'.join(parts)}: versión {VERSION}")
 
 
+def site_files():
+    for base, _, names in os.walk(path("docs")):
+        for name in names:
+            if name.endswith((".html", ".xml", ".txt")):
+                yield os.path.join(base, name)
+
+
+def sync_site_url():
+    """Cambia la dirección anterior del sitio por SITE_URL en todas las páginas de docs/, el sitemap y robots.txt."""
+    if not re.fullmatch(r"https://[a-z0-9.-]+/([a-z0-9-]+/)?", SITE_URL):
+        sys.exit(f"SITE_URL debe ser https://dominio/ o https://dominio/carpeta/ (con la barra final): {SITE_URL}")
+    m = re.search(r'<link rel="canonical" href="([^"]+)">', read("docs", "index.html").decode("utf-8"))
+    if not m:
+        sys.exit("No se encontró la URL canónica en docs/index.html")
+    old = m.group(1)
+    if old != SITE_URL:
+        for f in site_files():
+            with open(f, encoding="utf-8") as fh:
+                text = fh.read()
+            if old in text:
+                with open(f, "w", encoding="utf-8", newline="\n") as fh:
+                    fh.write(text.replace(old, SITE_URL))
+                print(f"[+] {os.path.relpath(f, ROOT)}: {SITE_URL}")
+    host = SITE_URL.split("/")[2]
+    cname = path("docs", "CNAME")
+    if host.endswith(".github.io"):
+        if os.path.exists(cname):
+            os.remove(cname)
+            print("[+] docs/CNAME eliminado (el sitio vuelve a github.io)")
+    elif not os.path.exists(cname) or read("docs", "CNAME").decode().strip() != host:
+        with open(cname, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(host + "\n")
+        print(f"[+] docs/CNAME: {host}")
+
+
 def make_zip():
     os.makedirs(path("dist"), exist_ok=True)
     out = path("dist", f"navestigio-{VERSION}.zip")
@@ -170,6 +209,7 @@ if __name__ == "__main__":
     if a.verificar_npm:
         verify_npm()
     sync_version()
+    sync_site_url()
     build()
     if a.zip:
         make_zip()

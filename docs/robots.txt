@@ -1,0 +1,6 @@
+# Solo tiene efecto en la raíz del dominio: en navestigio.github.io/navestigio/ los buscadores no lo leen.
+# Queda listo para cuando el sitio pase a su dominio propio.
+User-agent: *
+Allow: /
+
+Sitemap: https://navestigio.github.io/navestigio/sitemap.xml
