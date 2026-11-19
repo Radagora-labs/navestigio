@@ -4,6 +4,8 @@
 
 Navestigio revisa bases SQLite de navegadores (History, Login Data, Web Data, Cookies, places.sqlite) y convierte **todas** las columnas de fecha a GMT-5 (o a otra zona) de una sola vez. Su nombre une *navegador* y *vestigio* (del latín *vestigium*, huella): sigue las huellas que deja quien navega.
 
+> **English:** Navestigio is a free browser forensics tool for Chrome, Edge, Firefox and Safari: history, downloads, cookies, saved credentials, deleted records and integrity checks, in a single offline page. The interface is in Spanish.
+
 Todo ocurre dentro del navegador: la evidencia no se sube a ningún servidor, no se modifica y no hace falta conexión a internet. La página trae una política de seguridad (CSP) que le impide enviar datos a cualquier dirección.
 
 ## Descarga
