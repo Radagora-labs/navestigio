@@ -1,5 +1,5 @@
-# Solo tiene efecto en la raíz del dominio: en navestigio.github.io/navestigio/ los buscadores no lo leen.
-# Queda listo para cuando el sitio pase a su dominio propio.
+# Los buscadores solo leen robots.txt en la raíz de un dominio: mientras el sitio viva en una
+# subcarpeta de github.io no tiene efecto. Queda listo para el dominio propio.
 User-agent: *
 Allow: /
 
