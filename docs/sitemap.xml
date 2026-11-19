@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://navestigio.github.io/navestigio/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://navestigio.github.io/navestigio/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://navestigio.github.io/navestigio/en/"/>
+  </url>
+  <url>
+    <loc>https://navestigio.github.io/navestigio/en/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://navestigio.github.io/navestigio/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://navestigio.github.io/navestigio/en/"/>
+  </url>
+  <url>
+    <loc>https://navestigio.github.io/navestigio/guias/</loc>
+  </url>
+  <url>
+    <loc>https://navestigio.github.io/navestigio/guias/historial-borrado-chrome.html</loc>
+    <lastmod>2026-11-19</lastmod>
   </url>
 </urlset>

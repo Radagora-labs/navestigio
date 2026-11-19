@@ -135,6 +135,9 @@ VERSION_SPOTS = [
     (("docs", "index.html"), r"navestigio-\d+\.\d+\.\d+\.zip", "navestigio-{v}.zip"),
     (("docs", "index.html"), r'(<span class="eyebrow">)v\d+\.\d+\.\d+( · )', r"\g<1>v{v}\g<2>"),
     (("docs", "index.html"), r'"softwareVersion": "\d+\.\d+\.\d+"', '"softwareVersion": "{v}"'),
+    (("docs", "en", "index.html"), r"navestigio-\d+\.\d+\.\d+\.zip", "navestigio-{v}.zip"),
+    (("docs", "en", "index.html"), r'(<span class="eyebrow">)v\d+\.\d+\.\d+( · )', r"\g<1>v{v}\g<2>"),
+    (("docs", "en", "index.html"), r'"softwareVersion": "\d+\.\d+\.\d+"', '"softwareVersion": "{v}"'),
     (("package.json",), r'"version": "\d+\.\d+\.\d+"', '"version": "{v}"'),
 ]
 

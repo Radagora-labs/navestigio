@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Cómo saber si borraron el historial de Chrome o Edge (análisis forense)</title>
+<meta name="description" content="Cinco señales en la base History de Chrome y Edge que delatan un borrado del historial aunque no quede nada que recuperar, con las consultas SQL para comprobarlas.">
+<meta name="author" content="Oscar Stiven Garay Acosta">
+<meta name="theme-color" content="#11161c">
+<link rel="canonical" href="https://navestigio.github.io/navestigio/guias/historial-borrado-chrome.html">
+<meta property="og:site_name" content="Navestigio">
+<meta property="og:locale" content="es_ES">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://navestigio.github.io/navestigio/guias/historial-borrado-chrome.html">
+<meta property="og:title" content="Cómo saber si borraron el historial de Chrome o Edge (análisis forense)">
+<meta property="og:description" content="Cinco señales en la base History de Chrome y Edge que delatan un borrado del historial aunque no quede nada que recuperar, con las consultas SQL para comprobarlas.">
+<meta property="og:image" content="https://navestigio.github.io/navestigio/assets/vista-previa.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Cómo saber si borraron el historial de Chrome o Edge (análisis forense)",
+  "description": "Cinco señales en la base History de Chrome y Edge que delatan un borrado del historial aunque no quede nada que recuperar, con las consultas SQL para comprobarlas.",
+  "inLanguage": "es",
+  "datePublished": "2026-11-19",
+  "dateModified": "2026-11-19",
+  "url": "https://navestigio.github.io/navestigio/guias/historial-borrado-chrome.html",
+  "image": "https://navestigio.github.io/navestigio/assets/captura-integridad.webp",
+  "author": {"@type": "Person", "name": "Oscar Stiven Garay Acosta", "url": "https://github.com/oscargarayacosta"},
+  "about": ["análisis forense de navegadores", "Google Chrome", "Microsoft Edge", "SQLite"]
+}
+</script>
+<link rel="icon" href="../assets/navestigio_favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/sitio.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="../"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot" cx="14" cy="37" r="2.2"/><circle class="dot" cx="20.5" cy="32.5" r="2.7"/><circle class="dot" cx="27" cy="29" r="3.2"/><circle class="dot" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg>Navestigio</a>
+  <nav aria-label="Secciones"><a href="../#preguntas">Qué responde</a><a href="./">Guías</a><a href="../#empezar">Empezar</a><a href="../#versiones">Versiones</a><a href="https://github.com/navestigio/navestigio">GitHub</a></nav>
+  <a class="apoyo-top don" href="../#apoyar" title="GitHub Sponsors, Ko-fi o PayPal"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ht" d="M12 20l-7.2-6.9a4.6 4.6 0 0 1 7.2-5.8 4.6 4.6 0 0 1 7.2 5.8z"/></svg>Apoyar</a>
+</div></header>
+
+<main><article class="prosa">
+  <p class="migas"><a href="../">Navestigio</a> › <a href="./">Guías</a></p>
+  <h1>Cómo saber si borraron el historial de Chrome o Edge</h1>
+  <p class="lead">Cuando alguien borra el historial, la base de datos <code>History</code> no queda limpia: quedan contadores que no cuadran, huecos en los identificadores y, a veces, los propios registros borrados. Esta guía explica cinco señales, cómo comprobarlas a mano con SQL y qué se puede afirmar con cada una.</p>
+
+  <div class="corto"><b>En corto:</b> si <code>sqlite_sequence</code> dice que se insertaron más visitas que el id más alto que queda, faltan los registros más recientes. El navegador, por sí solo, borra los más antiguos, no los más recientes. Esa diferencia es el indicio más fuerte de un borrado deliberado.</div>
+
+  <h2>1. Consiga una copia correcta de la evidencia</h2>
+  <p>Chrome y Edge guardan el historial en un archivo SQLite llamado <code>History</code>, sin extensión, dentro de la carpeta del perfil:</p>
+  <table>
+    <thead><tr><th>Sistema</th><th>Ruta (perfil principal)</th></tr></thead>
+    <tbody>
+      <tr><td>Windows · Chrome</td><td><code>%LOCALAPPDATA%\Google\Chrome\User Data\Default\History</code></td></tr>
+      <tr><td>Windows · Edge</td><td><code>%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\History</code></td></tr>
+      <tr><td>macOS · Chrome</td><td><code>~/Library/Application Support/Google/Chrome/Default/History</code></td></tr>
+      <tr><td>Linux · Chrome</td><td><code>~/.config/google-chrome/Default/History</code></td></tr>
+    </tbody>
+  </table>
+  <p>Copie también <code>History-wal</code> y <code>History-journal</code> si existen: guardan los cambios más recientes. Haga la copia con el navegador cerrado o desde una imagen forense, calcule su SHA-256 y trabaje siempre sobre la copia. Los demás perfiles están en carpetas <code>Profile 1</code>, <code>Profile 2</code>, etc.</p>
+
+  <h2>2. Señal fuerte: faltan los registros más recientes</h2>
+  <p>Cuando una tabla usa <code>AUTOINCREMENT</code>, SQLite anota en <code>sqlite_sequence</code> el id más alto que ha entregado, aunque luego ese registro se borre. Compare ese contador con el id más alto que sigue en la tabla:</p>
+  <pre><code>SELECT name, seq FROM sqlite_sequence WHERE name IN ('visits', 'downloads');
+SELECT MAX(id) FROM visits;</code></pre>
+  <p>Si <code>seq</code> es 48.210 y el id más alto de <code>visits</code> es 48.150, faltan las 60 visitas más recientes. Chrome expira el historial antiguo (unos 90 días), y esa depuración elimina los registros de menor id, nunca los últimos. Por eso un faltante al final es consistente con «Borrar datos de navegación» de la última hora o del último día.</p>
+  <p>La fecha del último registro que queda marca el límite: el borrado afectó lo ocurrido después de ese momento.</p>
+
+  <h2>3. Huecos de id en medio de la tabla</h2>
+  <p>Los id de <code>visits</code> y <code>downloads</code> crecen de uno en uno. Un hueco grande en medio indica que se eliminaron entradas o un rango de tiempo:</p>
+  <pre><code>SELECT prev, id, id - prev - 1 AS faltan
+FROM (SELECT id, LAG(id) OVER (ORDER BY id) AS prev FROM visits)
+WHERE id - prev > 1
+ORDER BY faltan DESC LIMIT 5;</code></pre>
+  <p>Las fechas de los registros a cada lado del hueco acotan cuándo ocurrió lo borrado. Ojo: la sincronización con otro dispositivo y los borrados puntuales de una sola página también dejan huecos. Un hueco por sí solo es una pista para mirar la línea de tiempo, no una conclusión.</p>
+
+  <h2>4. Fechas que retroceden</h2>
+  <p>Al avanzar el id, la fecha de visita debería avanzar también. Las fechas de Chrome son microsegundos desde 1601 (formato WebKit); para leerlas:</p>
+  <pre><code>SELECT id, datetime(visit_time / 1000000 - 11644473600, 'unixepoch') AS fecha_utc
+FROM visits ORDER BY id DESC LIMIT 20;</code></pre>
+  <p>Un retroceso de más de un minuto es consistente con un cambio del reloj del sistema, con visitas importadas o con edición manual de la base. Excluya primero las visitas que llegaron por sincronización: en las versiones recientes tienen relleno el campo <code>originator_cache_guid</code>.</p>
+
+  <h2>5. Restos recuperables: páginas libres, freeblocks y -wal</h2>
+  <p>Borrar una fila no sobrescribe sus bytes de inmediato. Quedan en páginas libres de la base, en freeblocks dentro de páginas en uso y en versiones anteriores de páginas guardadas en el <code>-wal</code>. Para saber si hay páginas libres:</p>
+  <pre><code>PRAGMA freelist_count;</code></pre>
+  <p>Ahí se pueden recuperar URLs y títulos borrados. Un registro recuperado prueba que la URL estuvo en la base, pero no siempre conserva la fecha de la visita.</p>
+
+  <h2>6. Cookies creadas después de su último uso</h2>
+  <p>En la base <code>Cookies</code>, una cookie no puede usarse antes de crearse. Si <code>creation_utc</code> es posterior a <code>last_access_utc</code>, el reloj del sistema cambió o alguien editó las fechas. Sirve para corroborar las señales de los puntos 2 a 4.</p>
+
+  <h2>Qué se puede afirmar y qué no</h2>
+  <div class="nota">Estas señales prueban que faltan registros y acotan cuándo. No dicen quién borró ni con qué herramienta, y la fecha exacta del borrado no queda guardada en la base. Repórtelas con su confianza y con las explicaciones alternativas (sincronización, expiración, cambio de reloj).</div>
+
+  <h2>Hacerlo con Navestigio</h2>
+  <p><a href="../">Navestigio</a> mide todo lo anterior al abrir la carpeta del perfil, sin modificar la evidencia y sin conexión a internet. El panel <b>Integridad y posibles borrados</b> muestra cada indicador con tres datos separados: la prioridad (dónde mirar primero), la confianza (qué tan sólido es el hecho) y la interpretación (con qué es consistente). Las URLs recuperadas de páginas libres, freeblocks y el <code>-wal</code> aparecen en <b>Registros recuperados</b>, marcadas para que nunca se confundan con visitas confirmadas.</p>
+  <p>En Safari el caso es aún más claro: cada borrado deja un tombstone con el rango de fechas borrado, y Navestigio también lo lee.</p>
+  <div class="cta" style="margin-top:28px"><a class="btn primary" href="https://github.com/navestigio/navestigio/releases/latest">Descargar Navestigio gratis</a><a class="btn" href="./">Más guías</a></div>
+</article></main>
+
+<footer><div class="wrap">
+  <span>© 2026 Oscar Stiven Garay Acosta · <a href="https://github.com/navestigio/navestigio/blob/main/LICENSE">Todos los derechos reservados</a></span>
+  <span><a href="../">Navestigio</a> · <a href="./">Guías</a> · <a href="https://github.com/navestigio/navestigio/releases/latest">Descargar</a></span>
+</div></footer>
+</body>
+</html>
