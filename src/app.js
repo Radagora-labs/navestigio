@@ -1,6 +1,5 @@
 /*! Navestigio © 2026 Oscar Stiven Garay Acosta · Todos los derechos reservados · SPDX-License-Identifier: LicenseRef-Navestigio · uso según LICENSE; prohibido modificar o redistribuir */
 "use strict";
-const PAGE_SRC = "<!doctype html>\n" + document.documentElement.outerHTML;
 const WASM_B64 = "@@WASM_B64@@";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -932,14 +931,7 @@ function makeZip(entries) {
 }
 
 /* ---------------- Guardar archivos ---------------- */
-let downloadsNs;
 async function saveFile(filename, data) {
-  if (downloadsNs === undefined) downloadsNs = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null;
-  if (downloadsNs) {
-    try { await downloadsNs.save({filename, data}); toast("Archivo entregado: " + filename); }
-    catch (e) { if (e && e.code !== "declined") toast("No se pudo guardar: " + (e.message || e.code)); }
-    return;
-  }
   // Siempre como binario: el navegador descarga el archivo y nunca lo interpreta como página (HTML).
   const blob = new Blob([data], {type: "application/octet-stream"});
   const a = document.createElement("a");
@@ -1371,15 +1363,12 @@ $("btnRun").onclick = runSql;
 $("btnCancelQ").onclick = () => DB.cancel();
 $("btnConv").onclick = () => { showPanel("conv"); convert(); };
 $("btnConvert").onclick = convert;
-$("btnSelf").onclick = () => saveFile("navestigio.html", PAGE_SRC);
 document.addEventListener("pointerdown", e => {
   const b = e.target.closest("button"); if (!b || b.classList.contains("star")) return;
   const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height), sp = document.createElement("span");
   sp.className = "ripple"; sp.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
   b.appendChild(sp); setTimeout(() => sp.remove(), 600);
 });
-/* "Guardar herramienta" solo tiene sentido en la versión en línea */
-if (!(window.claude && typeof window.claude.use === "function")) $("btnSelf").classList.add("hide");
 /* Aplicación instalable (PWA): solo cuando se sirve con servir_navestigio.py en 127.0.0.1 */
 if (location.protocol === "http:" && /^(127\.0\.0\.1|localhost)$/.test(location.hostname) && "serviceWorker" in navigator) {
   const ml = document.createElement("link"); ml.rel = "manifest"; ml.href = "/manifest.webmanifest"; document.head.appendChild(ml);
