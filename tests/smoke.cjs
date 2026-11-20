@@ -145,6 +145,8 @@ const sha256 = b => crypto.createHash("sha256").update(b).digest("hex"), md5 = b
     ok(cap.all > 3 && cap.hashes <= 2 && cap.folded, "la lista de todas las evidencias va plegada aparte, no encima del hallazgo " + JSON.stringify(cap));
     await page.keyboard.press("Escape"); await sleep(400);
     ok(await page.evaluate(() => !document.querySelector("#grid .fcard") && !!document.querySelector("#grid table")), "al salir del modo captura vuelve la tabla");
+    const rep = unzip(await save("#btnZip", "caso-hallazgo.zip"))["informe.html"].toString("utf8"), h2 = [...rep.matchAll(/<h2>([^<]+)<\/h2>/g)].map(x => x[1]);
+    ok(h2[0] === "Hallazgos del analista" && /Nota de prueba del analista/.test(rep) && /Procedencia<\/span><p>[^<]+<br>SHA-256 <code>[0-9a-f]{64}<\/code>/.test(rep), "el informe abre con los hallazgos: nota, registro y SHA-256 de su evidencia " + JSON.stringify(h2.slice(0, 2)));
     await page.click('#grid [data-mark="0"]'); await sleep(800);
     page.once("dialog", d => d.accept());
     await page.click("#side [data-closeall]"); await page.waitForFunction(() => !document.body.classList.contains("busy"), null, {timeout: 60000}); await sleep(1200);
