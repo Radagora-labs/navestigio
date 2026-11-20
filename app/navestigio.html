@@ -115,6 +115,23 @@ body.capture header,body.capture aside,body.capture .bar,body.capture .pager,bod
 body.capture #caption{display:block;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);font-size:13px}
 body.capture #caption b{font-size:15px}
 body.capture #caption .meta{margin:2px 0 0}
+#caption .ph{overflow-wrap:anywhere}
+#caption details.prov{margin:4px 0 0;font-size:12px;color:var(--muted)}
+#caption details.prov summary{cursor:pointer;width:max-content;max-width:100%}
+#caption details.prov table{margin:6px 0 2px;border-collapse:collapse;font-family:var(--mono);font-size:11.5px}
+#caption details.prov td{padding:1px 14px 1px 0;border:0;vertical-align:top;overflow-wrap:anywhere}
+.fcards{display:grid;gap:12px;padding:14px;max-width:1100px}
+.fcard{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--star);border-radius:8px;padding:12px 16px}
+.fcard .fhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;font-size:13px}
+.fcard .fhead b{font-family:var(--display);font-size:15px}
+.fcard .fhead .conv{color:var(--time);font-family:var(--mono);font-size:12.5px}
+.fcard .fstar{color:var(--star)}
+.fcard .fsec{margin:10px 0 0}
+.fcard .flabel{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.fcard .fsec p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.fcard .fnote p{font-size:15px;line-height:1.45}
+.fcard .frec{font-family:var(--mono);font-size:12px}
+.fcard .fprov p{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
 body.capture td.long{white-space:normal;overflow-wrap:anywhere;min-width:240px;max-width:420px}
 body.capture tbody tr:hover td{background:transparent}
 body.capture tbody tr:hover td.conv{background:var(--time-bg)}
@@ -307,7 +324,7 @@ img.thumb{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin
 <body>
 
 <header>
-  <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot d1" cx="14" cy="37" r="2.2"/><circle class="dot d2" cx="20.5" cy="32.5" r="2.7"/><circle class="dot d3" cx="27" cy="29" r="3.2"/><circle class="dot d4" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg><h1 class="wordmark"><b>Navestigio</b><small>Forense de navegadores · v3.4.0 · <a href="https://github.com/navestigio/navestigio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title="© 2026 Oscar Stiven Garay Acosta. Todos los derechos reservados. Uso gratuito según la licencia de Navestigio, sin ninguna garantía. Prohibido modificar o redistribuir.">Licencia</a></small></h1></div>
+  <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot d1" cx="14" cy="37" r="2.2"/><circle class="dot d2" cx="20.5" cy="32.5" r="2.7"/><circle class="dot d3" cx="27" cy="29" r="3.2"/><circle class="dot d4" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg><h1 class="wordmark"><b>Navestigio</b><small>Forense de navegadores · v3.4.1 · <a href="https://github.com/navestigio/navestigio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title="© 2026 Oscar Stiven Garay Acosta. Todos los derechos reservados. Uso gratuito según la licencia de Navestigio, sin ninguna garantía. Prohibido modificar o redistribuir.">Licencia</a></small></h1></div>
   <button class="primary" id="btnFiles" type="button">Abrir archivos…</button>
   <button id="btnFolder" type="button" title="Seleccione la carpeta del perfil (ej. …\User Data\Default)">Abrir carpeta de perfil…</button>
   <input id="files" type="file" multiple class="hide">
@@ -2030,11 +2047,11 @@ async function fmtFor(db, sid, t, f, kind) {
 /* ---------------- Paquete de entrega verificable ----------------
    El ZIP lleva: CSV por tabla, informe.html, manifest.json (cadena de custodia en formato de máquina) y
    SHA256SUMS.txt con el hash de cada archivo del paquete, verificable con «sha256sum -c SHA256SUMS.txt». */
-const BUILD_ID = "f8034a09ac5cf0cfa1e2aee9265207bc16f470f63ab7b0dd1b0559be8fe4bde6";
+const BUILD_ID = "db7ebc171239183127d5743af9f0ad1e196d28dbe394757368877f131e19045d";
 async function exportZip() {
   const db = cur(); if (!db) return;
   const t = tz(), entries = [], dbs = db.virtual ? realDbs() : [db], files = [];
-  const lines = [`Navestigio v3.4.0 · forense de navegadores · compilación ${BUILD_ID.slice(0, 16)}`, `Generado: ${nowLocal()} (${tzLabel(t)})`, `Evidencia: ${db.path}${db.sample ? " (DATOS DE EJEMPLO)" : ""}`,
+  const lines = [`Navestigio v3.4.1 · forense de navegadores · compilación ${BUILD_ID.slice(0, 16)}`, `Generado: ${nowLocal()} (${tzLabel(t)})`, `Evidencia: ${db.path}${db.sample ? " (DATOS DE EJEMPLO)" : ""}`,
     "Hashes de la evidencia original (SHA-256 · MD5):", ...dbs.flatMap(d => d.hashes.map(([k, v, m]) => `  ${k}  ${v}  ${m || ""}`))];
   for (const d of dbs) if (d.walInfo) lines.push(`WAL aplicado (${d.label}): ${d.walInfo.commits} transacciones, ${d.walInfo.frames} frames, ${d.walInfo.pages} páginas${d.walInfo.note ? " · " + d.walInfo.note : ""}`);
   const ir = dbs.flatMap(integrityRows).sort((a, b) => ({Alta: 0, Media: 1}[a[4]] ?? 2) - ({Alta: 0, Media: 1}[b[4]] ?? 2)), sc = scopeInfo();
@@ -2064,7 +2081,7 @@ async function exportZip() {
   const sums = []; for (const [n, d] of entries) { const b = bytesOf(d); sums.push({archivo: n, bytes: b.length, sha256: await sha256(b)}); }
   const manifest = {
     formato: "navestigio-manifest/1",
-    herramienta: {nombre: "Navestigio", version: "3.4.0", compilacion: BUILD_ID, sqlite: sqliteVer, navegador: navigator.userAgent},
+    herramienta: {nombre: "Navestigio", version: "3.4.1", compilacion: BUILD_ID, sqlite: sqliteVer, navegador: navigator.userAgent},
     generado: {utc: new Date().toISOString(), local: nowLocal(), zona_horaria: tzLabel(t), regla_zona: typeof t === "string" ? "zona IANA, con horario de verano" : "desfase fijo, sin horario de verano"},
     exportacion: {vista: db.virtual ? "Análisis del caso" : db.label, filtros: "ninguno: el ZIP exporta las tablas completas"},
     evidencias: dbs.map(d => ({nombre: d.label, ruta: d.path, bytes: d.size, datos_de_ejemplo: !!d.sample, tipo: d.json ? "JSON" : "SQLite",
@@ -2099,7 +2116,7 @@ th{background:#f4f6f8;white-space:nowrap}.s{white-space:nowrap}code,.h{font-fami
 .n{background:#fdf6e3;border-left:3px solid #a8650a;padding:8px 10px;margin:12px 0}ul{margin:4px 0}
 @media print{body{margin:0}h2{break-after:avoid}tr{break-inside:avoid}}</style></head><body>
 <h1>Informe de análisis de navegador</h1>
-<p class="m">${esc(db.virtual ? "Análisis del caso: todas las evidencias abiertas" : db.path)} · generado ${esc(nowLocal())} · fechas en ${esc(tzLabel(t))} · Navestigio v3.4.0 (compilación <code>${esc(BUILD_ID.slice(0, 16))}</code>)</p>
+<p class="m">${esc(db.virtual ? "Análisis del caso: todas las evidencias abiertas" : db.path)} · generado ${esc(nowLocal())} · fechas en ${esc(tzLabel(t))} · Navestigio v3.4.1 (compilación <code>${esc(BUILD_ID.slice(0, 16))}</code>)</p>
 <div class="n">Prioridad, confianza e interpretación son cosas distintas. La <b>prioridad</b> indica dónde mirar primero. La <b>confianza</b> indica qué tan sólido es el hecho medido. La <b>interpretación</b> dice con qué es consistente el hecho; no afirma lo que hizo el usuario.</div>
 <h2>Evidencias</h2>${tbl(["Evidencia", "Ruta", "Tamaño", "SHA-256", "MD5"], dbs.flatMap(d => d.hashes.map(([k, v, m], i) => [esc(k) + (d.sample ? " (ejemplo)" : ""), i ? "" : esc(d.path), i ? "" : `<span class="s">${esc(fmtSize(d.size))}</span>`, `<span class="h">${esc(v)}</span>`, `<span class="h">${esc(m || "")}</span>`])))}
 <h2>Indicadores de integridad</h2>${tbl(["Prioridad", "Confianza", "Indicador", "Evidencia", "Fechas", "Detalle", "Interpretación"], ir.map(r => [`<span class="p ${esc(r[4])}">${esc(r[4])}</span>`, `<span class="s">${esc(r[5])}</span>`, esc(r[3]), `<span class="s">${esc(r[2])}</span>`, when(r), esc(r[6]), esc(r[7])]))}
@@ -2217,7 +2234,7 @@ function renderGrid() {
     h += `<tr data-row="${ri}" style="--i:${Math.min(ri, 40)}" class="${tags.length ? "alert" : ""}${on ? " marked" : ""}"><td class="mk"><button type="button" class="star${on ? " on" : ""}" data-mark="${ri}" aria-label="${on ? "Quitar hallazgo" : "Marcar como hallazgo"}" title="${on ? "Quitar hallazgo" : "Marcar como hallazgo"}">${on ? "★" : "☆"}</button></td>${showAl ? `<td class="al">${tags.map(t => `<span class="chip${t === DANGER ? " danger" : ""}" title="${t === DANGER ? "danger_type distinto de 0" : esc("Prioridad de revisión · coincide con «" + (d.terms[ri][t] || "") + "» · no prueba intención")}">${esc(t).replace(/\//g, "/<wbr>")}</span>`).join("")}</td>` : ""}` + vis.map(i => { const c = d.columns[i], v = r[i], im = !c.conv && d.imgs[ri][d.cols.indexOf(c.src)]; return `<td class="${c.conv ? "conv" : c.kind ? "raw" : ""}${String(v).length > 40 && !im ? " long" : ""}" title="${esc(v)}">${im ? `<img class="thumb" src="${im}" alt="imagen">` : ""}${esc(v)}</td>`; }).join("") + "</tr>"; });
   if (!d.rows.length) h += `<tr><td class="muted" colspan="${vis.length + 2}">${isF ? "Aún no hay hallazgos. Marque filas con ☆ en cualquier tabla." + (MK_FILE ? " Abierto con doble clic, los hallazgos solo duran mientras esta pestaña esté abierta: exporte el caso (ZIP) antes de cerrarla o use iniciar_navestigio.bat." : "") : "Sin resultados."}</td></tr>`;
   if (!vis.length) h = `<p class="muted" style="padding:12px">Todas las columnas están ocultas. Use «Columnas visibles» para mostrarlas.</p>`;
-  $("grid").innerHTML = (vis.length ? h + "</tbody></table>" : h) + '<div id="scanline"></div>';
+  $("grid").innerHTML = (findingCards() ? renderFindingCards() : vis.length ? h + "</tbody></table>" : h) + '<div id="scanline"></div>';
   S.colOrder = vis.map(i => colKey(d.columns[i])); S.colOffset = 1 + (showAl ? 1 : 0); S.showAl = showAl; applyWidths();
   const end = Math.min(d.offset + d.rows.length, d.total), nh = d.columns.length - vis.length;
   $("pinfo").textContent = `${d.total ? d.offset + 1 : 0}–${end} de ${d.total} filas${nh ? ` · ${nh} columnas ocultas` : ""} · doble clic en una fila para ver el detalle`;
@@ -2239,15 +2256,42 @@ function renderCols() {
     <div class="cols">` + d.columns.map(c => { const off = isHidden(c, hs);
       return `<label class="${c.conv ? "c" : ""}${off ? " off" : ""}"><input type="checkbox" data-col="${esc(colKey(c))}"${off ? "" : " checked"}${HIDE_RAW && c.kind && !c.conv ? " disabled" : ""}>${esc(c.name)}</label>`; }).join("") + "</div>";
 }
+/* Procedencia de lo que se ve: en el análisis del caso solo las evidencias de las filas de esta página (no todas las abiertas).
+   La lista completa va aparte, plegada, para que no tape el hallazgo en el pantallazo. */
+function viewProvenance(db, d) {
+  if (!db.virtual) return db.hashes;
+  const ai = d.cols.indexOf("artefacto"), si = d.cols.indexOf("sha256"), seen = new Map(); if (ai < 0) return [];
+  for (const r of d.raws) { const a = r[ai]; if (seen.has(a)) continue; const h = si >= 0 && r[si] ? r[si] : (db.hashes.find(x => x[0] === a) || [])[1]; if (h) seen.set(a, h); }
+  return [...seen];
+}
+const PROV_MAX = 3;
 function renderCaption() {
   const db = cur(); if (!db) return; const d = S.data;
   const s = db.sources.find(s => s.id === S.src), q = $("q").value;
-  const end = Math.min(d.offset + d.rows.length, d.total);
+  const end = Math.min(d.offset + d.rows.length, d.total), cards = findingCards(), shown = viewProvenance(db, d);
+  const hl = ([k, v]) => `<span class="ph">SHA-256 ${esc(k)}: ${v}</span>`;
+  const prov = !db.virtual ? `<div class="meta">Evidencia: ${esc(db.path)} · ${db.hashes.map(hl).join(" · ")}</div>`
+    : `<div class="meta">Evidencia: ${esc(db.path)} (${db.hashes.length})${cards ? " · el SHA-256 de cada hallazgo va en su tarjeta" : !shown.length ? "" : ` · ${shown.slice(0, PROV_MAX).map(hl).join(" · ")}${shown.length > PROV_MAX ? ` · y ${shown.length - PROV_MAX} más en la procedencia completa` : ""}`}</div>` +
+      (db.hashes.length ? `<details class="prov"><summary>Procedencia completa: ${db.hashes.length} ${db.hashes.length === 1 ? "evidencia abierta" : "evidencias abiertas"} con su SHA-256</summary><table>${db.hashes.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join("")}</table></details>` : "");
   $("caption").innerHTML = `<b>${esc(db.label)} › ${esc(s ? s.title : "Consulta SQL")}</b>${db.sample ? ' <span class="tag">ejemplo</span>' : ""}
-    <div class="meta">Evidencia: ${esc(db.path)} · ${db.hashes.map(([k, v]) => `SHA-256 ${esc(k)}: ${v}`).join(" · ")}</div>
+    ${prov}
     <div class="meta">Fechas en ${tzLabel(tz())} · filas ${d.total ? d.offset + 1 : 0}–${end} de ${d.total}${q ? ` · filtro: «${esc(q)}»` : ""}${(() => { const f = readFilters(); return (f.from || f.to ? ` · ${esc(d.rc)} entre ${esc((f.from || "…").replace("T", " "))} y ${esc((f.to || "…").replace("T", " "))}` : "") + (f.alerts ? (f.cat ? ` · alerta: ${esc(f.cat)}` : " · solo filas con alerta") : ""); })()}${S.sort ? ` · orden: ${esc(S.sort)} ${S.desc ? "desc" : "asc"}` : ""}${db.walInfo && db.walInfo.commits ? " · WAL aplicado" : ""} · generado ${nowLocal()}</div>`;
 }
-function setCapture(on) { document.body.classList.toggle("capture", on); $("detail").classList.add("hide"); if (on) toast("Modo captura: tome el pantallazo. Esc para salir."); }
+/* En modo captura los hallazgos se muestran como tarjetas: la nota del analista primero, luego el registro señalado y su
+   procedencia (la evidencia y su SHA-256), sin columnas estrechas ni la lista de todas las evidencias. */
+const findingCards = () => document.body.classList.contains("capture") && S.src === "s:hallazgos" && cur() && cur().virtual;
+function renderFindingCards() {
+  const d = S.data, at = (src, conv) => d.columns.findIndex(c => c.src === src && !!c.conv === conv);
+  const iM = at("momento", true) >= 0 ? at("momento", true) : at("momento", false), iF = at("fuente", false), iA = at("artefacto", false), iR = at("resumen", false), iN = at("nota", false), iS = at("sha256", false);
+  const v = (r, i) => i >= 0 ? String(r[i] ?? "") : "";
+  if (!d.rows.length) return `<p class="muted" style="padding:14px">Aún no hay hallazgos. Marque filas con ☆ en cualquier tabla.</p>`;
+  return `<div class="fcards">` + d.rows.map((r, ri) => { const nota = v(r, iN).trim();
+    return `<article class="fcard"><div class="fhead"><span class="fstar" aria-hidden="true">★</span><b>Hallazgo ${d.offset + ri + 1} de ${d.total}</b>${v(r, iM) ? `<span class="conv">${esc(v(r, iM))}</span>` : ""}<span>${esc(v(r, iF))}</span></div>
+      <div class="fsec fnote"><span class="flabel">Nota del analista</span>${nota ? `<p>${esc(nota)}</p>` : '<p class="muted">Sin nota.</p>'}</div>
+      <div class="fsec"><span class="flabel">Registro señalado</span><p class="frec">${esc(v(r, iR))}</p></div>
+      <div class="fsec fprov"><span class="flabel">Procedencia</span><p>${esc(v(r, iA))}${v(r, iS) ? ` · SHA-256 ${esc(v(r, iS))}` : ""}</p></div></article>`; }).join("") + "</div>";
+}
+function setCapture(on) { document.body.classList.toggle("capture", on); $("detail").classList.add("hide"); if (S.data && cur() && S.src !== "s:resumen") renderGrid(); if (on) toast("Modo captura: tome el pantallazo. Esc para salir."); }
 function rowKey(ri) { const db = cur(), d = S.data, s = db.sources.find(s => s.id === S.src);
   return (db.virtual ? "caso" : db.hashes[0] ? db.hashes[0][1] : db.id) + "|" + (s ? s.title : S.src) + "|" + JSON.stringify(d.raws[ri]); }
 function markFor(ri) {

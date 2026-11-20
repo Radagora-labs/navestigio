@@ -130,6 +130,22 @@ const sha256 = b => crypto.createHash("sha256").update(b).digest("hex"), md5 = b
     ok(await page.evaluate(() => !document.querySelector('#side .sgrp[data-k="c:cookies"]').open), "las categorías se pliegan");
     await click('.src[data-src="s:timeline"]');
     ok(await page.evaluate(() => !document.querySelector('#side .sgrp[data-k="c:cookies"]').open), "una categoría plegada sigue plegada al cambiar de vista");
+
+    console.log("Modo captura de hallazgos");
+    await page.click('#grid [data-mark="0"]'); await sleep(800);
+    await click('.src[data-src="s:hallazgos"]');
+    await page.dblclick('#grid tr[data-row="0"] td:nth-child(3)'); await sleep(400);
+    await page.fill("#mkNote", "Nota de prueba del analista"); await page.click("#mkSave"); await sleep(900);
+    await page.evaluate(() => document.getElementById("detail").classList.add("hide"));
+    await click("#btnCapture");
+    const cap = await page.evaluate(() => ({cards: document.querySelectorAll("#grid .fcard").length, note: (document.querySelector("#grid .fcard .fnote") || {}).textContent || "",
+      prov: (document.querySelector("#grid .fcard .fprov") || {}).textContent || "", hashes: (document.querySelector("#caption").textContent.match(/SHA-256 /g) || []).length,
+      folded: !!document.querySelector("#caption details.prov:not([open])"), all: CASE.hashes.length}));
+    ok(cap.cards === 1 && /Nota de prueba del analista/.test(cap.note) && /SHA-256 [0-9a-f]{64}/.test(cap.prov), "en modo captura el hallazgo se ve con su nota y el SHA-256 de su evidencia");
+    ok(cap.all > 3 && cap.hashes <= 2 && cap.folded, "la lista de todas las evidencias va plegada aparte, no encima del hallazgo " + JSON.stringify(cap));
+    await page.keyboard.press("Escape"); await sleep(400);
+    ok(await page.evaluate(() => !document.querySelector("#grid .fcard") && !!document.querySelector("#grid table")), "al salir del modo captura vuelve la tabla");
+    await page.click('#grid [data-mark="0"]'); await sleep(800);
     page.once("dialog", d => d.accept());
     await page.click("#side [data-closeall]"); await page.waitForFunction(() => !document.body.classList.contains("busy"), null, {timeout: 60000}); await sleep(1200);
     const after = await page.evaluate(() => ({n: realDbs().length, welcome: !document.getElementById("welcome").classList.contains("hide"), groups: document.querySelectorAll("#side .sgrp").length,
