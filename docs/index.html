@@ -97,7 +97,7 @@
     <div class="q"><span class="k">Recuperación e integridad</span><h3>¿Qué se borró?</h3><p>Recupera URLs de páginas libres, freeblocks y el -wal, y detecta huecos y borrados aunque no quede nada que recuperar.</p></div>
     <div class="q"><span class="k">Interpretación</span><h3>¿Qué buscó?</h3><p>Saca las búsquedas de la URL en Google, Bing, YouTube y otros once sitios, e interpreta cookies de Google Analytics.</p></div>
     <div class="q"><span class="k">Alertas</span><h3>¿Qué reviso primero?</h3><p>Reglas editables por categorías de política de uso: nube, antiforense, malware, contenido sexual, material ilegal y más.</p></div>
-    <div class="q"><span class="k">Entrega</span><h3>¿Qué entrego?</h3><p>Un ZIP con informe, manifiesto con SHA-256 y MD5, y sumas que otro perito verifica con un solo comando.</p></div>
+    <div class="q"><span class="k">Entrega</span><h3>¿Qué entrego?</h3><p>Un ZIP con las tablas, los hallazgos y la línea de tiempo, manifiesto con SHA-256 y MD5, y sumas que otro perito verifica con un solo comando.</p></div>
   </div>
 </div></section>
 
@@ -132,7 +132,7 @@
     <li><b>La evidencia no se modifica</b>Se lee una copia en memoria, en solo lectura. El -wal se aplica a esa copia, nunca al original.</li>
     <li><b>Hashes de todo</b>SHA-256 y MD5 de cada archivo abierto, y SHA-256 de cada archivo exportado.</li>
     <li><b>Evidencia hostil bajo control</b>Las consultas corren en un Web Worker. Una base maliciosa se cancela sin congelar la página.</li>
-    <li><b>Exportaciones seguras</b>Los CSV neutralizan fórmulas, y el informe HTML no lleva scripts.</li>
+    <li><b>Exportaciones seguras</b>Los CSV neutralizan fórmulas para que un título de página malicioso no se ejecute en Excel.</li>
     <li><b>Compilación verificable</b>Cada cambio regenera la app desde el código fuente, compara sql.js con npm byte a byte y corre pruebas en Chromium.</li>
   </ul>
 </div></section>

@@ -179,8 +179,7 @@ Las tablas `urls`, `downloads` y las demás de interés aparecen en negrita en l
   - **JSONL**: un objeto JSON por fila, con `timestamp_utc` y todas las columnas (crudas y convertidas). Sirve para Timesketch, `jq` o cualquier script.
   - **bodyfile**: el formato de `mactime` (The Sleuth Kit), con la fecha en segundos Unix.
   - **l2t CSV**: las 17 columnas de log2timeline/Plaso, con la fecha en la zona horaria elegida.
-- **Exportar todo (ZIP)** es el paquete de entrega. Trae todas las tablas y vistas ya convertidas, y además:
-  - `informe.html`: informe autónomo (sin scripts) que abre con los hallazgos del analista en orden cronológico (nota, registro señalado y evidencia con su SHA-256), seguido de las evidencias y sus hashes, indicadores de integridad, alertas por categoría y alcance del análisis. Se puede imprimir a PDF desde el navegador.
+- **Exportar todo (ZIP)** es el paquete de entrega. Trae todas las tablas y vistas ya convertidas (incluidos los hallazgos con sus notas), y además:
   - `manifest.json`: la cadena de custodia en formato de máquina. Incluye el SHA-256 y el MD5 de cada evidencia, el `-wal` aplicado, la versión y la huella de compilación de Navestigio, la versión de SQLite, la zona horaria y su regla, el hash de las reglas de alerta, los indicadores y el SHA-256 de cada archivo exportado.
   - `SHA256SUMS.txt`: el SHA-256 de cada archivo del paquete. Otro perito lo comprueba con `sha256sum -c SHA256SUMS.txt` (Linux o macOS) o `certutil -hashfile <archivo> SHA256` (Windows).
   - `LEEME_cadena_custodia.txt`: lo mismo en texto legible.
