@@ -1184,7 +1184,7 @@ function renderGrid() {
     h += `<tr data-row="${ri}" style="--i:${Math.min(ri, 40)}" class="${tags.length ? "alert" : ""}${on ? " marked" : ""}"><td class="mk"><button type="button" class="star${on ? " on" : ""}" data-mark="${ri}" aria-label="${on ? "Quitar hallazgo" : "Marcar como hallazgo"}" title="${on ? "Quitar hallazgo" : "Marcar como hallazgo"}">${on ? "★" : "☆"}</button></td>${showAl ? `<td class="al">${tags.map(t => `<span class="chip${t === DANGER ? " danger" : ""}" title="${t === DANGER ? "danger_type distinto de 0" : esc("Prioridad de revisión · coincide con «" + (d.terms[ri][t] || "") + "» · no prueba intención")}">${esc(t).replace(/\//g, "/<wbr>")}</span>`).join("")}</td>` : ""}` + vis.map(i => { const c = d.columns[i], v = r[i], im = !c.conv && d.imgs[ri][d.cols.indexOf(c.src)]; return `<td class="${c.conv ? "conv" : c.kind ? "raw" : ""}${String(v).length > 40 && !im ? " long" : ""}" title="${esc(v)}">${im ? `<img class="thumb" src="${im}" alt="imagen">` : ""}${esc(v)}</td>`; }).join("") + "</tr>"; });
   if (!d.rows.length) h += `<tr><td class="muted" colspan="${vis.length + 2}">${isF ? "Aún no hay hallazgos. Marque filas con ☆ en cualquier tabla." + (MK_FILE ? " Abierto con doble clic, los hallazgos solo duran mientras esta pestaña esté abierta: exporte el caso (ZIP) antes de cerrarla o use iniciar_navestigio.bat." : "") : "Sin resultados."}</td></tr>`;
   if (!vis.length) h = `<p class="muted" style="padding:12px">Todas las columnas están ocultas. Use «Columnas visibles» para mostrarlas.</p>`;
-  $("grid").innerHTML = (vis.length ? h + "</tbody></table>" : h) + '<div id="scanline"></div>';
+  $("grid").innerHTML = (findingCards() ? renderFindingCards() : vis.length ? h + "</tbody></table>" : h) + '<div id="scanline"></div>';
   S.colOrder = vis.map(i => colKey(d.columns[i])); S.colOffset = 1 + (showAl ? 1 : 0); S.showAl = showAl; applyWidths();
   const end = Math.min(d.offset + d.rows.length, d.total), nh = d.columns.length - vis.length;
   $("pinfo").textContent = `${d.total ? d.offset + 1 : 0}–${end} de ${d.total} filas${nh ? ` · ${nh} columnas ocultas` : ""} · doble clic en una fila para ver el detalle`;
@@ -1206,15 +1206,42 @@ function renderCols() {
     <div class="cols">` + d.columns.map(c => { const off = isHidden(c, hs);
       return `<label class="${c.conv ? "c" : ""}${off ? " off" : ""}"><input type="checkbox" data-col="${esc(colKey(c))}"${off ? "" : " checked"}${HIDE_RAW && c.kind && !c.conv ? " disabled" : ""}>${esc(c.name)}</label>`; }).join("") + "</div>";
 }
+/* Procedencia de lo que se ve: en el análisis del caso solo las evidencias de las filas de esta página (no todas las abiertas).
+   La lista completa va aparte, plegada, para que no tape el hallazgo en el pantallazo. */
+function viewProvenance(db, d) {
+  if (!db.virtual) return db.hashes;
+  const ai = d.cols.indexOf("artefacto"), si = d.cols.indexOf("sha256"), seen = new Map(); if (ai < 0) return [];
+  for (const r of d.raws) { const a = r[ai]; if (seen.has(a)) continue; const h = si >= 0 && r[si] ? r[si] : (db.hashes.find(x => x[0] === a) || [])[1]; if (h) seen.set(a, h); }
+  return [...seen];
+}
+const PROV_MAX = 3;
 function renderCaption() {
   const db = cur(); if (!db) return; const d = S.data;
   const s = db.sources.find(s => s.id === S.src), q = $("q").value;
-  const end = Math.min(d.offset + d.rows.length, d.total);
+  const end = Math.min(d.offset + d.rows.length, d.total), cards = findingCards(), shown = viewProvenance(db, d);
+  const hl = ([k, v]) => `<span class="ph">SHA-256 ${esc(k)}: ${v}</span>`;
+  const prov = !db.virtual ? `<div class="meta">Evidencia: ${esc(db.path)} · ${db.hashes.map(hl).join(" · ")}</div>`
+    : `<div class="meta">Evidencia: ${esc(db.path)} (${db.hashes.length})${cards ? " · el SHA-256 de cada hallazgo va en su tarjeta" : !shown.length ? "" : ` · ${shown.slice(0, PROV_MAX).map(hl).join(" · ")}${shown.length > PROV_MAX ? ` · y ${shown.length - PROV_MAX} más en la procedencia completa` : ""}`}</div>` +
+      (db.hashes.length ? `<details class="prov"><summary>Procedencia completa: ${db.hashes.length} ${db.hashes.length === 1 ? "evidencia abierta" : "evidencias abiertas"} con su SHA-256</summary><table>${db.hashes.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join("")}</table></details>` : "");
   $("caption").innerHTML = `<b>${esc(db.label)} › ${esc(s ? s.title : "Consulta SQL")}</b>${db.sample ? ' <span class="tag">ejemplo</span>' : ""}
-    <div class="meta">Evidencia: ${esc(db.path)} · ${db.hashes.map(([k, v]) => `SHA-256 ${esc(k)}: ${v}`).join(" · ")}</div>
+    ${prov}
     <div class="meta">Fechas en ${tzLabel(tz())} · filas ${d.total ? d.offset + 1 : 0}–${end} de ${d.total}${q ? ` · filtro: «${esc(q)}»` : ""}${(() => { const f = readFilters(); return (f.from || f.to ? ` · ${esc(d.rc)} entre ${esc((f.from || "…").replace("T", " "))} y ${esc((f.to || "…").replace("T", " "))}` : "") + (f.alerts ? (f.cat ? ` · alerta: ${esc(f.cat)}` : " · solo filas con alerta") : ""); })()}${S.sort ? ` · orden: ${esc(S.sort)} ${S.desc ? "desc" : "asc"}` : ""}${db.walInfo && db.walInfo.commits ? " · WAL aplicado" : ""} · generado ${nowLocal()}</div>`;
 }
-function setCapture(on) { document.body.classList.toggle("capture", on); $("detail").classList.add("hide"); if (on) toast("Modo captura: tome el pantallazo. Esc para salir."); }
+/* En modo captura los hallazgos se muestran como tarjetas: la nota del analista primero, luego el registro señalado y su
+   procedencia (la evidencia y su SHA-256), sin columnas estrechas ni la lista de todas las evidencias. */
+const findingCards = () => document.body.classList.contains("capture") && S.src === "s:hallazgos" && cur() && cur().virtual;
+function renderFindingCards() {
+  const d = S.data, at = (src, conv) => d.columns.findIndex(c => c.src === src && !!c.conv === conv);
+  const iM = at("momento", true) >= 0 ? at("momento", true) : at("momento", false), iF = at("fuente", false), iA = at("artefacto", false), iR = at("resumen", false), iN = at("nota", false), iS = at("sha256", false);
+  const v = (r, i) => i >= 0 ? String(r[i] ?? "") : "";
+  if (!d.rows.length) return `<p class="muted" style="padding:14px">Aún no hay hallazgos. Marque filas con ☆ en cualquier tabla.</p>`;
+  return `<div class="fcards">` + d.rows.map((r, ri) => { const nota = v(r, iN).trim();
+    return `<article class="fcard"><div class="fhead"><span class="fstar" aria-hidden="true">★</span><b>Hallazgo ${d.offset + ri + 1} de ${d.total}</b>${v(r, iM) ? `<span class="conv">${esc(v(r, iM))}</span>` : ""}<span>${esc(v(r, iF))}</span></div>
+      <div class="fsec fnote"><span class="flabel">Nota del analista</span>${nota ? `<p>${esc(nota)}</p>` : '<p class="muted">Sin nota.</p>'}</div>
+      <div class="fsec"><span class="flabel">Registro señalado</span><p class="frec">${esc(v(r, iR))}</p></div>
+      <div class="fsec fprov"><span class="flabel">Procedencia</span><p>${esc(v(r, iA))}${v(r, iS) ? ` · SHA-256 ${esc(v(r, iS))}` : ""}</p></div></article>`; }).join("") + "</div>";
+}
+function setCapture(on) { document.body.classList.toggle("capture", on); $("detail").classList.add("hide"); if (S.data && cur() && S.src !== "s:resumen") renderGrid(); if (on) toast("Modo captura: tome el pantallazo. Esc para salir."); }
 function rowKey(ri) { const db = cur(), d = S.data, s = db.sources.find(s => s.id === S.src);
   return (db.virtual ? "caso" : db.hashes[0] ? db.hashes[0][1] : db.id) + "|" + (s ? s.title : S.src) + "|" + JSON.stringify(d.raws[ri]); }
 function markFor(ri) {
