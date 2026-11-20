@@ -25,4 +25,4 @@ Las consultas corren en un Web Worker que se puede cancelar. Si una base malform
 
 ## Versiones con soporte
 
-Solo la última versión publicada en Releases recibe correcciones de seguridad.
+La versión actual es la 3.4.2. Solo la última versión publicada en Releases recibe correcciones de seguridad.

@@ -1,6 +1,6 @@
 # Componentes de terceros
 
-`app/navestigio.html` incrusta los siguientes componentes. Sus archivos originales están en `vendor/`, con sus sumas SHA-256 en `vendor/SHA256SUMS`.
+`app/navestigio.html` (Navestigio 3.4.2) incrusta los siguientes componentes. Sus archivos originales están en `vendor/`, con sus sumas SHA-256 en `vendor/SHA256SUMS`.
 
 | Componente | Versión | Licencia | Origen |
 |---|---|---|---|

@@ -139,6 +139,8 @@ VERSION_SPOTS = [
     (("docs", "en", "index.html"), r'(<span class="eyebrow">)v\d+\.\d+\.\d+( · )', r"\g<1>v{v}\g<2>"),
     (("docs", "en", "index.html"), r'"softwareVersion": "\d+\.\d+\.\d+"', '"softwareVersion": "{v}"'),
     (("package.json",), r'"version": "\d+\.\d+\.\d+"', '"version": "{v}"'),
+    (("SECURITY.md",), r"La versión actual es la \d+\.\d+\.\d+\.", "La versión actual es la {v}."),
+    (("THIRD_PARTY_NOTICES.md",), r"\(Navestigio \d+\.\d+\.\d+\)", "(Navestigio {v})"),
 ]
 
 
