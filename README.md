@@ -256,4 +256,4 @@ Desde la versión 3.2.0, Navestigio **no es software de código abierto**. Su c�
 
 Para integrarla en un producto, distribuirla o encargar una versión a la medida, hay una licencia comercial: ver [LICENCIA-COMERCIAL.md](LICENCIA-COMERCIAL.md).
 
-Las versiones 3.1.1 y anteriores se publicaron bajo la licencia MIT. Este proyecto no acepta pull requests ([CONTRIBUTING.md](CONTRIBUTING.md)). Los componentes de terceros y sus licencias están en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Este proyecto no acepta pull requests ([CONTRIBUTING.md](CONTRIBUTING.md)). Los componentes de terceros y sus licencias están en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
