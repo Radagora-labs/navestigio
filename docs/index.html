@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Navestigio · Análisis forense de navegadores gratis (Chrome, Edge, Firefox, Safari)</title>
+<meta name="description" content="Herramienta gratuita de análisis forense de navegadores: historial, descargas, cookies y credenciales de Chrome, Edge, Firefox y Safari. Sin instalar y sin internet.">
+<meta name="author" content="Oscar Stiven Garay Acosta">
+<meta name="theme-color" content="#11161c">
+<meta name="google-site-verification" content="2zBfkmBFweSLwSRvHVpm7rWY3CES2liUpa5Y_-77rlI">
+<link rel="canonical" href="https://navestigio.github.io/navestigio/">
+<link rel="alternate" hreflang="es" href="https://navestigio.github.io/navestigio/">
+<link rel="alternate" hreflang="en" href="https://navestigio.github.io/navestigio/en/">
+<link rel="alternate" hreflang="x-default" href="https://navestigio.github.io/navestigio/">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:site_name" content="Navestigio">
+<meta property="og:locale" content="es_ES">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://navestigio.github.io/navestigio/">
+<meta property="og:title" content="Navestigio · Análisis forense de navegadores">
+<meta property="og:description" content="Línea de tiempo, registros borrados, indicadores de integridad y entrega verificable. Sin instalar nada y sin que la evidencia salga del equipo.">
+<meta property="og:image" content="https://navestigio.github.io/navestigio/assets/vista-previa.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="Navestigio: resumen de un caso de análisis forense de navegadores">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Navestigio",
+  "alternateName": "Navestigio · forense de navegadores",
+  "description": "Herramienta gratuita de análisis forense de navegadores. Analiza el historial, las descargas, las cookies y las credenciales de Chrome, Edge, Firefox y Safari sin conexión a internet: línea de tiempo, registros borrados, indicadores de integridad y entrega verificable.",
+  "applicationCategory": "SecurityApplication",
+  "applicationSubCategory": "Análisis forense digital",
+  "operatingSystem": "Windows, macOS, Linux",
+  "softwareVersion": "3.4.2",
+  "inLanguage": "es",
+  "isAccessibleForFree": true,
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+  "url": "https://navestigio.github.io/navestigio/",
+  "downloadUrl": "https://github.com/navestigio/navestigio/releases/latest",
+  "codeRepository": "https://github.com/navestigio/navestigio",
+  "image": "https://navestigio.github.io/navestigio/assets/vista-previa.png",
+  "screenshot": ["https://navestigio.github.io/navestigio/assets/captura-resumen.webp", "https://navestigio.github.io/navestigio/assets/captura-linea-de-tiempo.webp", "https://navestigio.github.io/navestigio/assets/captura-integridad.webp"],
+  "author": {"@type": "Person", "name": "Oscar Stiven Garay Acosta", "url": "https://github.com/oscargarayacosta"},
+  "keywords": "análisis forense de navegadores, forense de navegadores, browser forensics, DFIR, historial de Chrome, Firefox, Safari, Edge, cookies, credenciales"
+}
+</script>
+<link rel="icon" href="assets/navestigio_favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/sitio.css">
+</head>
+<body>
+<!-- Enlaces del proyecto: si el repositorio no queda en github.com/navestigio/navestigio, cambie REPO aquí y en los enlaces de abajo. -->
+<header class="top"><div class="wrap">
+  <a class="brand" href="#"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot" cx="14" cy="37" r="2.2"/><circle class="dot" cx="20.5" cy="32.5" r="2.7"/><circle class="dot" cx="27" cy="29" r="3.2"/><circle class="dot" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg>Navestigio</a>
+  <nav aria-label="Secciones"><a href="#preguntas">Qué responde</a><a href="#integridad">Integridad</a><a href="#seguridad">Seguridad</a><a href="#empezar">Empezar</a><a href="#versiones">Versiones</a><a href="guias/">Guías</a><a href="https://github.com/navestigio/navestigio">GitHub</a><a href="en/" hreflang="en" lang="en">English</a></nav>
+  <a class="apoyo-top don" href="#apoyar" title="GitHub Sponsors, Ko-fi o PayPal"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ht" d="M12 20l-7.2-6.9a4.6 4.6 0 0 1 7.2-5.8 4.6 4.6 0 0 1 7.2 5.8z"/></svg>Apoyar</a>
+</div></header>
+
+<main>
+<div class="wrap hero">
+  <div>
+    <span class="eyebrow">v3.4.2 · gratis · en español</span>
+    <h1>Siga las huellas que deja <em>quien navega</em>.</h1>
+    <p class="lead">Navestigio es una herramienta gratuita de análisis forense de navegadores. Analiza el historial, las descargas, las cookies y las credenciales de Chrome, Edge, Firefox y Safari en una sola página que funciona sin internet. La evidencia no sale del equipo y no se modifica.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/navestigio/navestigio/releases/latest">Descargar la última versión</a>
+      <a class="btn" href="https://github.com/navestigio/navestigio">Ver el código</a>
+    </div>
+    <p class="fine">Windows, macOS y Linux · Sin instalación · Uso gratuito · licencia comercial para empresas</p>
+  </div>
+  <div class="trail-art" aria-hidden="true">
+    <svg viewBox="0 0 400 400">
+      <path class="t" d="M30 330 C80 300 90 260 130 250 S190 230 205 200"/>
+      <path class="gap" d="M205 200 C225 170 245 160 265 140"/>
+      <path class="t" d="M265 140 C285 120 310 110 350 60"/>
+      <circle class="d" cx="30" cy="330" r="5"/><circle class="d" cx="80" cy="298" r="6"/><circle class="d" cx="130" cy="250" r="7"/><circle class="d" cx="175" cy="232" r="8"/><circle class="d" cx="205" cy="200" r="9"/>
+      <circle class="d" cx="265" cy="140" r="9"/><circle class="d" cx="310" cy="108" r="10"/><circle class="d" cx="350" cy="60" r="11"/>
+      <g class="scan"><circle class="lens" cx="232" cy="170" r="70"/>
+      <line class="handle" x1="282" y1="220" x2="335" y2="273"/></g>
+    </svg>
+  </div>
+</div>
+
+<div class="wrap"><figure class="shot" style="margin:0"><div class="bar"><i></i><i></i><i></i></div>
+  <img src="assets/captura-resumen.webp" width="2160" height="1350" alt="Resumen del caso en Navestigio: indicadores clave, actividad por día y por hora, y sitios más visitados" loading="eager"></figure></div>
+
+<section id="preguntas"><div class="wrap">
+  <h2>Las preguntas de un caso, en una sola herramienta</h2>
+  <p class="sub">Abra los archivos del perfil y Navestigio cruza todo en una línea de tiempo en su hora local. Cada vista responde una pregunta concreta.</p>
+  <div class="qs">
+    <div class="q"><span class="k">Resumen del caso</span><h3>¿Qué pasó?</h3><p>Visitas, descargas, búsquedas y credenciales, con actividad por día y por hora y los sitios más visitados.</p></div>
+    <div class="q"><span class="k">Línea de tiempo</span><h3>¿Cuándo?</h3><p>Todos los artefactos en una sola tabla. Desde cualquier fila puede ver lo que pasó 5, 15 o 60 minutos antes y después.</p></div>
+    <div class="q"><span class="k">Recuperación e integridad</span><h3>¿Qué se borró?</h3><p>Recupera URLs de páginas libres, freeblocks y el -wal, y detecta huecos y borrados aunque no quede nada que recuperar.</p></div>
+    <div class="q"><span class="k">Interpretación</span><h3>¿Qué buscó?</h3><p>Saca las búsquedas de la URL en Google, Bing, YouTube y otros once sitios, e interpreta cookies de Google Analytics.</p></div>
+    <div class="q"><span class="k">Alertas</span><h3>¿Qué reviso primero?</h3><p>Reglas editables por categorías de política de uso: nube, antiforense, malware, contenido sexual, material ilegal y más.</p></div>
+    <div class="q"><span class="k">Entrega</span><h3>¿Qué entrego?</h3><p>Un ZIP con las tablas, los hallazgos y la línea de tiempo, manifiesto con SHA-256 y MD5, y sumas que otro perito verifica con un solo comando.</p></div>
+  </div>
+</div></section>
+
+<section id="integridad" style="background:var(--panel);border-block:1px solid var(--line)"><div class="wrap split rev">
+  <figure class="shot" style="margin:0"><div class="bar"><i></i><i></i><i></i></div><img src="assets/captura-integridad.webp" width="2160" height="1350" alt="Indicadores de integridad: faltan los registros más recientes, hueco de id en visits y alcance del análisis" loading="lazy"></figure>
+  <div>
+    <h2>Detecta el borrado aunque no se recupere nada</h2>
+    <p class="sub" style="margin-bottom:0">SQLite deja rastros cuando se borra: contadores que no cuadran, huecos en los id, fechas que retroceden. Navestigio los mide y los presenta sin exagerar.</p>
+    <ul class="ax">
+      <li><span class="pill p1">Prioridad</span><span>Dónde mirar primero. No es una acusación.</span></li>
+      <li><span class="pill p2">Confianza</span><span>Qué tan sólido es el hecho medido.</span></li>
+      <li><span class="pill p3">Interpretación</span><span>Con qué es consistente el hecho, por ejemplo «borrado de la actividad más reciente».</span></li>
+    </ul>
+    <p class="fine">Y un bloque de alcance que dice qué no se analizó, para que un resultado limpio no pase por completo.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap split">
+  <div>
+    <h2>Cada fila dice de dónde viene</h2>
+    <p class="sub" style="margin-bottom:16px">La línea de tiempo distingue un registro vigente de uno recuperado o de un indicador, con su confianza y el origen de la fecha. Un registro borrado nunca se confunde con una visita confirmada.</p>
+    <p class="sub" style="margin-bottom:0">Exporte en CSV para Excel, en JSONL para Timesketch o <code>jq</code>, en bodyfile para <code>mactime</code> o en l2t CSV para Plaso.</p>
+  </div>
+  <figure class="shot" style="margin:0"><div class="bar"><i></i><i></i><i></i></div><img src="assets/captura-linea-de-tiempo.webp" width="2160" height="1350" alt="Línea de tiempo unificada con alertas por categoría, fechas en hora local y artefacto de origen" loading="lazy"></figure>
+</div></section>
+
+<section id="seguridad" style="background:var(--panel);border-block:1px solid var(--line)"><div class="wrap">
+  <h2>Hecho para manejar evidencia</h2>
+  <p class="sub">Una herramienta forense que se descarga de internet tiene que ganarse la confianza. Esto es lo que garantiza Navestigio y cómo comprobarlo.</p>
+  <ul class="sec">
+    <li><b>Nada sale del equipo</b>Una política de seguridad (CSP) bloquea toda conexión de red. No hay telemetría ni recursos externos.</li>
+    <li><b>La evidencia no se modifica</b>Se lee una copia en memoria, en solo lectura. El -wal se aplica a esa copia, nunca al original.</li>
+    <li><b>Hashes de todo</b>SHA-256 y MD5 de cada archivo abierto, y SHA-256 de cada archivo exportado.</li>
+    <li><b>Evidencia hostil bajo control</b>Las consultas corren en un Web Worker. Una base maliciosa se cancela sin congelar la página.</li>
+    <li><b>Exportaciones seguras</b>Los CSV neutralizan fórmulas para que un título de página malicioso no se ejecute en Excel.</li>
+    <li><b>Compilación verificable</b>Cada cambio regenera la app desde el código fuente, compara sql.js con npm byte a byte y corre pruebas en Chromium.</li>
+  </ul>
+</div></section>
+
+<section id="empezar"><div class="wrap">
+  <h2>Empezar en tres pasos</h2>
+  <p class="sub">No necesita instalar nada. Python es opcional: solo sirve para abrirla como aplicación en 127.0.0.1.</p>
+  <ol class="steps">
+    <li><b>Descargue y verifique</b>Baje el zip de la última versión y compare su SHA-256 con el publicado en el release.</li>
+    <li><b>Abra Navestigio</b>Doble clic en <code>iniciar_navestigio.bat</code>, o en <code>navestigio.html</code> en Chrome, Edge o Firefox.</li>
+    <li><b>Cargue la evidencia</b>Arrastre los archivos o abra la carpeta del perfil. Navestigio reconoce cada artefacto.</li>
+  </ol>
+  <pre><code>certutil -hashfile navestigio-3.4.2.zip SHA256      # Windows
+sha256sum -c navestigio-3.4.2.zip.sha256           # Linux o macOS</code></pre>
+</div></section>
+
+<section id="apoyar"><div class="wrap">
+  <div class="apoyo">
+    <div>
+      <h2>Apoye el proyecto</h2>
+      <p class="sub">Navestigio es gratuito y lo desarrollo en mi tiempo libre. Si le ahorra horas en sus casos, su apoyo me ayuda a dedicarle más tiempo y a sumar nuevos artefactos. ¡Gracias!</p>
+    </div>
+    <div class="cta">
+      <a class="btn don sponsors" href="https://github.com/sponsors/oscargarayacosta"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ht" d="M12 20l-7.2-6.9a4.6 4.6 0 0 1 7.2-5.8 4.6 4.6 0 0 1 7.2 5.8z"/></svg>Patrocinar en GitHub</a>
+      <a class="btn don kofi" href="https://ko-fi.com/oscargarayacosta"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ln" d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path class="ln" d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16"/><path class="ht" d="M10 16.2l-2.4-2.3a1.5 1.5 0 0 1 2.4-1.8 1.5 1.5 0 0 1 2.4 1.8z"/></svg>Apoyar en Ko-fi</a>
+      <a class="btn don paypal" href="https://www.paypal.com/donate/?hosted_button_id=BK7ND8EZR8GQJ"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ht" d="M12 20l-7.2-6.9a4.6 4.6 0 0 1 7.2-5.8 4.6 4.6 0 0 1 7.2 5.8z"/></svg>Donar con PayPal</a>
+      <p class="nota">GitHub Sponsors no cobra comisión: todo llega al proyecto.</p>
+    </div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <h2>Artefactos soportados</h2>
+  <p class="sub">Chrome, Edge y otros navegadores basados en Chromium, Firefox y Safari.</p>
+  <div class="arts">
+    <div><h3>Historial</h3><p>History, places.sqlite y History.db de Safari: visitas, transiciones, búsquedas, descargas con su cadena de redirecciones.</p></div>
+    <div><h3>Credenciales y formularios</h3><p>Login Data y Web Data: credenciales guardadas (cuenta las contraseñas cifradas) y autocompletar.</p></div>
+    <div><h3>Cookies</h3><p>Cookies de Chromium y Firefox, con interpretación de Google Analytics, BIG-IP y Quantcast.</p></div>
+    <div><h3>Navegación rápida</h3><p>Shortcuts de la barra de direcciones, Top Sites y Favicons con su miniatura.</p></div>
+    <div><h3>Perfil</h3><p>Bookmarks, Preferences, Secure Preferences y Local State: cuentas, extensiones y perfiles.</p></div>
+    <div><h3>Edge</h3><p>Colecciones de Edge (collectionsSQLite).</p></div>
+    <div><h3>Sesiones</h3><p>sessionstore.jsonlz4 de Firefox: pestañas abiertas y cerradas, con su fecha de último uso o de cierre.</p></div>
+    <div><h3>Extensiones</h3><p>Carpeta Extensions de Chromium y extensions.json de Firefox, con los permisos sensibles destacados.</p></div>
+    <div><h3>Borrados en Safari</h3><p>Los tombstones de Safari prueban que se borró historial y de qué rango de fechas.</p></div>
+  </div>
+</div></section>
+<section id="versiones" style="background:var(--panel);border-block:1px solid var(--line)"><div class="wrap">
+  <h2>Gratis para analizar. Enterprise para la organización.</h2>
+  <p class="sub">La versión gratuita seguirá siendo la mejor forma de analizar un caso. Enterprise suma lo que necesita un equipo de respuesta a incidentes: muchos equipos en un mismo caso, detección de fuga de información y casos que se guardan y se retoman.</p>
+  <div class="planes">
+    <div class="plan">
+      <span class="tag">disponible hoy</span>
+      <h3>Navestigio</h3>
+      <p class="para">Para analistas, peritos y estudiantes.</p>
+      <div class="precio"><b>Gratis</b><span>también para uso profesional</span></div>
+      <ul class="inc">
+        <li>Chrome, Edge, Brave, Opera, Firefox y Safari</li>
+        <li>Línea de tiempo unificada, alertas y búsquedas interpretadas</li>
+        <li>Registros borrados, indicadores de integridad y tombstones de Safari</li>
+        <li>Sesiones de Firefox, extensiones y perfiles detectados</li>
+        <li>Paquete de entrega verificable con SHA-256 y cadena de custodia</li>
+        <li>Funciona sin internet; la evidencia no sale del equipo</li>
+      </ul>
+      <div class="cta"><a class="btn primary" href="https://github.com/navestigio/navestigio/releases/latest">Descargar gratis</a></div>
+    </div>
+    <div class="plan ent">
+      <span class="tag">en desarrollo · acceso anticipado</span>
+      <h3>Navestigio Enterprise</h3>
+      <p class="para">Para equipos de respuesta a incidentes, consultoras y áreas de seguridad.</p>
+      <div class="precio"><b>USD 390</b><span>por analista · licencia perpetua, sin cuotas mensuales</span></div>
+      <ul class="inc">
+        <li>Todo lo de la versión gratuita</li>
+        <li><b>Caso multi-equipo y multi-usuario</b>: colecciones de KAPE, Velociraptor o una imagen montada en una sola línea de tiempo</li>
+        <li><b>Detección de exfiltración</b>: nubes personales, transferencias, webmail personal, picos de descargas e IA generativa</li>
+        <li><b>Caso persistente</b>: guarde y retome el caso cifrado, con marcadores, etiquetas y notas</li>
+        <li>Interfaz en inglés</li>
+        <li class="todo">Después: IOC propios (STIX, MISP), reglas de la organización, informe con su marca y paquete firmado</li>
+      </ul>
+      <div class="tiers" aria-label="Licencias">
+        <div class="tier"><small>Analista</small><b>USD 390</b><small>1 puesto</small></div>
+        <div class="tier"><small>Equipo</small><b>USD 1.490</b><small>hasta 5 puestos</small></div>
+        <div class="tier"><small>Organización</small><b>USD 3.900</b><small>puestos ilimitados</small></div>
+      </div>
+      <p class="pioneros"><b>Programa de pioneros:</b> 30 % de descuento para las primeras 10 organizaciones que se sumen al acceso anticipado.</p>
+      <div class="cta"><a class="btn primary" href="mailto:oscargarayacosta@pm.me?subject=Navestigio%20Enterprise%3A%20acceso%20anticipado">Solicitar acceso anticipado</a></div>
+    </div>
+  </div>
+
+  <table class="cmp">
+    <thead><tr><th>Función</th><th>Gratuita</th><th>Enterprise</th></tr></thead>
+    <tbody>
+      <tr><td>Análisis de un perfil o de la carpeta de un usuario</td><td class="si">Sí</td><td class="si">Sí</td></tr>
+      <tr><td>Integridad, registros borrados y cadena de custodia</td><td class="si">Sí</td><td class="si">Sí</td></tr>
+      <tr><td>Exportación CSV, JSONL, bodyfile y l2t</td><td class="si">Sí</td><td class="si">Sí</td></tr>
+      <tr><td>Muchos equipos y usuarios en un mismo caso</td><td class="no">—</td><td class="ent">Sí</td></tr>
+      <tr><td>Detección de exfiltración de información</td><td class="no">—</td><td class="ent">Sí</td></tr>
+      <tr><td>Guardar y retomar el caso cifrado</td><td class="no">—</td><td class="ent">Sí</td></tr>
+      <tr><td>Interfaz en inglés</td><td class="no">—</td><td class="ent">Sí</td></tr>
+      <tr><td>Soporte</td><td class="no">Issues en GitHub</td><td class="ent">Correo directo</td></tr>
+    </tbody>
+  </table>
+
+  <p class="promesa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b style="color:var(--fg)">La exactitud forense nunca se cobra.</b> Todo lo que decide si un resultado es correcto (nuevos navegadores, integridad, registros borrados y cadena de custodia) sigue llegando a la versión gratuita. Enterprise cobra por escala, automatización y trabajo en equipo.</span></p>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>© 2026 Oscar Stiven Garay Acosta · <a href="https://github.com/navestigio/navestigio/blob/main/LICENSE">Todos los derechos reservados</a> · <a href="https://github.com/navestigio/navestigio/blob/main/LICENCIA-COMERCIAL.md">Licencia comercial</a></span>
+  <span><a href="https://github.com/navestigio/navestigio">Código</a> · <a href="https://github.com/navestigio/navestigio/releases">Versiones</a> · <a href="https://github.com/navestigio/navestigio/security/policy">Reportar una vulnerabilidad</a> · <a href="guias/">Guías</a> · <a href="en/" hreflang="en" lang="en">English</a> <span class="pie-don don"><a href="https://github.com/sponsors/oscargarayacosta"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ht" d="M12 20l-7.2-6.9a4.6 4.6 0 0 1 7.2-5.8 4.6 4.6 0 0 1 7.2 5.8z"/></svg>Sponsors</a><a href="https://ko-fi.com/oscargarayacosta"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ln" d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path class="ln" d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16"/><path class="ht" d="M10 16.2l-2.4-2.3a1.5 1.5 0 0 1 2.4-1.8 1.5 1.5 0 0 1 2.4 1.8z"/></svg>Ko-fi</a><a href="https://www.paypal.com/donate/?hosted_button_id=BK7ND8EZR8GQJ"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ht" d="M12 20l-7.2-6.9a4.6 4.6 0 0 1 7.2-5.8 4.6 4.6 0 0 1 7.2 5.8z"/></svg>PayPal</a></span></span>
+</div></footer>
+</body>
+</html>
