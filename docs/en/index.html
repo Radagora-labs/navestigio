@@ -94,7 +94,7 @@
     <div class="q"><span class="k">Recovery and integrity</span><h3>What was deleted?</h3><p>Recovers URLs from free pages, freeblocks and the -wal, and detects gaps and deletions even when nothing is left to recover.</p></div>
     <div class="q"><span class="k">Interpretation</span><h3>What did they search for?</h3><p>Extracts search terms from Google, Bing, YouTube and eleven other sites, and decodes Google Analytics cookies.</p></div>
     <div class="q"><span class="k">Alerts</span><h3>What do I review first?</h3><p>Editable rules by acceptable-use category: cloud storage, anti-forensics, malware, adult content, illegal material and more.</p></div>
-    <div class="q"><span class="k">Delivery</span><h3>What do I hand over?</h3><p>A ZIP with the report, a manifest with SHA-256 and MD5, and checksums another examiner verifies with one command.</p></div>
+    <div class="q"><span class="k">Delivery</span><h3>What do I hand over?</h3><p>A ZIP with the tables, the findings and the timeline, a manifest with SHA-256 and MD5, and checksums another examiner verifies with one command.</p></div>
   </div>
 </div></section>
 
@@ -129,7 +129,7 @@
     <li><b>Evidence is never modified</b>It reads an in-memory, read-only copy. The -wal is applied to that copy, never to the original.</li>
     <li><b>Hashes of everything</b>SHA-256 and MD5 of every file opened, and SHA-256 of every file exported.</li>
     <li><b>Hostile evidence under control</b>Queries run in a Web Worker. A malicious database is cancelled without freezing the page.</li>
-    <li><b>Safe exports</b>CSV files neutralize formulas, and the HTML report contains no scripts.</li>
+    <li><b>Safe exports</b>CSV files neutralize formulas so a malicious page title does not run in Excel.</li>
     <li><b>Verifiable build</b>Every change rebuilds the app from source, compares sql.js byte for byte with npm and runs tests in Chromium.</li>
   </ul>
 </div></section>

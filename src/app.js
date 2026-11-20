@@ -987,7 +987,7 @@ async function fmtFor(db, sid, t, f, kind) {
 }
 
 /* ---------------- Paquete de entrega verificable ----------------
-   El ZIP lleva: CSV por tabla, informe.html, manifest.json (cadena de custodia en formato de máquina) y
+   El ZIP lleva: CSV por tabla, la cadena de custodia en texto, manifest.json (cadena de custodia en formato de máquina) y
    SHA256SUMS.txt con el hash de cada archivo del paquete, verificable con «sha256sum -c SHA256SUMS.txt». */
 const BUILD_ID = "@@BUILD@@";
 async function exportZip() {
@@ -1018,7 +1018,6 @@ async function exportZip() {
   lines.push("", "Verificación: SHA256SUMS.txt trae el SHA-256 de cada archivo de este paquete. En Linux o macOS: sha256sum -c SHA256SUMS.txt. En Windows: certutil -hashfile <archivo> SHA256.");
   entries.push(["LEEME_cadena_custodia.txt", lines.join("\r\n")]);
   let sqliteVer = ""; try { sqliteVer = String((await qAll("caso", "SELECT sqlite_version()"))[0][0]); } catch (e) { rethrowCancel(e); }
-  entries.push(["informe.html", reportHtml(db, dbs, ir, sc, t)]);
   const enc = new TextEncoder(), bytesOf = x => typeof x === "string" ? enc.encode(x) : x;
   const sums = []; for (const [n, d] of entries) { const b = bytesOf(d); sums.push({archivo: n, bytes: b.length, sha256: await sha256(b)}); }
   const manifest = {
@@ -1042,42 +1041,6 @@ async function exportZip() {
   saveFile(`${safe(db.label)}_completo_${tzLabel(t)}.zip`, makeZip(entries));
 }
 function marksOf(dbs) { const shas = new Set(dbs.map(d => d.hashes[0] && d.hashes[0][1])); return MARKS.filter(m => shas.has(m.sha)); }
-// Hallazgos en orden cronológico (los que no tienen fecha, al final): así el informe se lee como la secuencia de los hechos
-function marksChrono(dbs) {
-  const k = m => { try { return m.momento ? BigInt(m.momento) : null; } catch (e) { return null; } }, o = (a, b) => (a.marcado || 0) - (b.marcado || 0);
-  return marksOf(dbs).slice().sort((a, b) => { const x = k(a), y = k(b); return x === null ? (y === null ? o(a, b) : 1) : y === null ? -1 : x < y ? -1 : x > y ? 1 : o(a, b); }); }
-/* Informe HTML autónomo: sin scripts ni recursos externos (CSP), todo el texto escapado */
-function reportHtml(db, dbs, ir, sc, t) {
-  const tbl = (head, rows) => rows.length ? `<table><thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>` : '<p class="m">Ninguno.</p>';
-  const when = r => r[0] ? esc(fmt(r[0], "webkit", t)) + (r[1] ? " – " + esc(fmt(r[1], "webkit", t)) : "") : "";
-  const marks = marksChrono(dbs);
-  const st = db.virtual && CASE.alertStats ? [...CASE.alertStats.cats].sort((a, b) => b[1].n - a[1].n) : [];
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
-<title>Informe Navestigio · ${esc(db.label)}</title><style>
-body{font:14px/1.5 system-ui,"Segoe UI",Roboto,sans-serif;color:#17202b;background:#fff;max-width:1100px;margin:24px auto;padding:0 16px}
-h1{font-size:24px;margin:0}h2{font-size:17px;margin:28px 0 8px;border-bottom:2px solid #1f5fae;padding-bottom:4px}
-.m{color:#5d6b7a}table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{border:1px solid #dfe4ea;padding:4px 6px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
-th{background:#f4f6f8;white-space:nowrap}.s{white-space:nowrap}code,.h{font-family:Consolas,monospace;font-size:11.5px}.p{font-weight:600;white-space:nowrap}.Alta{color:#b42318}.Media{color:#7a4b00}
-.n{background:#fdf6e3;border-left:3px solid #a8650a;padding:8px 10px;margin:12px 0}ul{margin:4px 0}
-.f{border:1px solid #dfe4ea;border-left:4px solid #a8650a;border-radius:4px;margin:10px 0;break-inside:avoid}.f>div{padding:6px 10px}
-.fh{background:#f4f6f8;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}.fh b{color:#a8650a}.fl{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#5d6b7a}
-.fn p{margin:2px 0;font-size:15px;white-space:pre-wrap}.fr{font-family:Consolas,monospace;font-size:12px;overflow-wrap:anywhere;margin:2px 0}.fp p{margin:2px 0;font-size:12px;overflow-wrap:anywhere}
-@media print{body{margin:0}h2{break-after:avoid}tr{break-inside:avoid}}</style></head><body>
-<h1>Informe de análisis de navegador</h1>
-<p class="m">${esc(db.virtual ? "Análisis del caso: todas las evidencias abiertas" : db.path)} · generado ${esc(nowLocal())} · fechas en ${esc(tzLabel(t))} · Navestigio v@@VERSION@@ (compilación <code>${esc(BUILD_ID.slice(0, 16))}</code>)</p>
-<h2>Hallazgos del analista</h2>${marks.length ? `<p class="m">${marks.length === 1 ? "Un hallazgo marcado" : `${marks.length} hallazgos marcados`}, en orden cronológico: la nota del analista, el registro señalado y la evidencia de la que sale, con su SHA-256.</p>` + marks.map((m, i) => `<div class="f"><div class="fh"><b>★ Hallazgo ${i + 1} de ${marks.length}</b>${m.momento ? `<span>${esc(fmt(m.momento, "webkit", t))}</span>` : ""}<span>${esc(m.fuente)}</span></div>
-<div class="fn"><span class="fl">Nota del analista</span>${(m.nota || "").trim() ? `<p>${esc(m.nota.trim())}</p>` : '<p class="m">Sin nota.</p>'}</div>
-<div><span class="fl">Registro señalado</span><p class="fr">${esc(m.resumen)}</p></div>
-<div class="fp"><span class="fl">Procedencia</span><p>${esc(m.artefacto)}${m.sha ? `<br>SHA-256 <code>${esc(m.sha)}</code>` : ""}</p></div></div>`).join("\n") : '<p class="m">El analista no marcó hallazgos.</p>'}
-<div class="n">Prioridad, confianza e interpretación son cosas distintas. La <b>prioridad</b> indica dónde mirar primero. La <b>confianza</b> indica qué tan sólido es el hecho medido. La <b>interpretación</b> dice con qué es consistente el hecho; no afirma lo que hizo el usuario.</div>
-<h2>Evidencias</h2>${tbl(["Evidencia", "Ruta", "Tamaño", "SHA-256", "MD5"], dbs.flatMap(d => d.hashes.map(([k, v, m], i) => [esc(k) + (d.sample ? " (ejemplo)" : ""), i ? "" : esc(d.path), i ? "" : `<span class="s">${esc(fmtSize(d.size))}</span>`, `<span class="h">${esc(v)}</span>`, `<span class="h">${esc(m || "")}</span>`])))}
-<h2>Indicadores de integridad</h2>${tbl(["Prioridad", "Confianza", "Indicador", "Evidencia", "Fechas", "Detalle", "Interpretación"], ir.map(r => [`<span class="p ${esc(r[4])}">${esc(r[4])}</span>`, `<span class="s">${esc(r[5])}</span>`, esc(r[3]), `<span class="s">${esc(r[2])}</span>`, when(r), esc(r[6]), esc(r[7])]))}
-${db.virtual ? `<h2>Alertas por categoría</h2><p class="m">Prioridad de revisión, no prueba de conducta: la URL o el título contienen un término de la regla.</p>${tbl(["Categoría", "Eventos", "Sitios principales"], st.map(([nm, c]) => [esc(nm), nf(c.n), esc([...c.hosts].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([h, n]) => `${h} (${n})`).join(", "))]))}` : ""}
-<h2>Alcance del análisis</h2><p><b>Se analizó</b></p><ul>${sc.done.map(x => `<li>${esc(x)}</li>`).join("")}</ul><p><b>No se analizó</b></p><ul>${sc.not.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
-<h2>Verificación</h2><p>Este paquete incluye <code>manifest.json</code> (hashes de cada evidencia, versión, zona horaria y reglas) y <code>SHA256SUMS.txt</code> con el SHA-256 de cada archivo. Verifíquelo con <code>sha256sum -c SHA256SUMS.txt</code> en Linux o macOS, o con <code>certutil -hashfile archivo SHA256</code> en Windows.</p>
-</body></html>`;
-}
 
 /* ---------------- Interfaz ---------------- */
 function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.remove("hide"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add("hide"), 4500); }
