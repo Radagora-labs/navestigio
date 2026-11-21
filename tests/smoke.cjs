@@ -41,7 +41,7 @@ const sha256 = b => crypto.createHash("sha256").update(b).digest("hex"), md5 = b
     await pt.keyboard.press("Escape"); await sleep(300);
     ok(await pt.evaluate(() => document.getElementById("tour").classList.contains("hide") && localStorage.getItem("navestigio_tour") === null), "Esc lo cierra sin guardar la preferencia");
     await pt.reload(); await pt.waitForSelector("#tour:not(.hide)", {timeout: 30000}); await sleep(600);
-    await pt.check("#tourNo"); await pt.click("#tourX"); await pt.reload();
+    await pt.check("#tourNo"); await pt.click("#tourX"); await sleep(1500); await pt.reload();   // Chromium escribe el localStorage en lotes
     await pt.waitForFunction(() => document.querySelectorAll(".db").length >= 3, null, {timeout: 30000}); await sleep(1200);
     ok(await pt.evaluate(() => document.getElementById("tour").classList.contains("hide") && localStorage.getItem("navestigio_tour") === "oculto"), "con «No volver a mostrar» no aparece al abrir de nuevo");
     await pt.click("#btnTour"); await sleep(600);
