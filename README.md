@@ -13,12 +13,18 @@ Todo ocurre dentro del navegador: la evidencia no se sube a ningún servidor, no
 Descarga `navestigio-<versión>.zip` desde la sección **Releases** del repositorio y descomprímelo en una carpeta propia (no directamente en Descargas). Cada release publica también el SHA-256 del zip; en Windows puedes comprobarlo con:
 
 ```
-certutil -hashfile navestigio-3.4.2.zip SHA256
+certutil -hashfile navestigio-3.5.0.zip SHA256
 ```
 
 ## Cómo usarla
 
 Ejecuta `iniciar_navestigio.bat`. Si tienes Python, lo sirve en http://127.0.0.1:8765 con `servir_navestigio.py` (así se ve el favicon) y abre el navegador; deja esa ventana abierta mientras trabajas. Sin Python, abre el HTML directamente. También se puede abrir con doble clic en Chrome, Edge o Firefox. Los hallazgos, reglas y anchos se guardan por dirección: los de 127.0.0.1 son distintos de los del archivo abierto con doble clic. No necesita Python ni conexión a internet. Los archivos se procesan dentro del navegador, aplica el `-wal` y calcula los SHA-256. Para revisar una carpeta de perfil completa, usa "Abrir carpeta de perfil…".
+
+## Recorrido guiado
+
+La primera vez que abres Navestigio aparece un recorrido corto por las funciones principales: abrir evidencia, el caso y sus vistas, el resumen, la línea de tiempo, marcar hallazgos, filtros, exportación, modo captura, zona horaria y reglas. Usa los datos de ejemplo, así que no necesitas evidencia para seguirlo. Se maneja con el teclado: ← y → avanzan o retroceden, Esc sale.
+
+Vuelve a aparecer en cada inicio hasta que lo terminas o marcas **No volver a mostrar**. Puedes repetirlo cuando quieras con el botón **Recorrido guiado** de la barra superior. La preferencia se guarda solo en ese navegador.
 
 ## Instalar como aplicación (ícono en la barra de tareas)
 

@@ -1389,6 +1389,144 @@ const drop = $("drop");
 ["dragleave", "drop"].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
 document.addEventListener("drop", e => openFiles(e.dataTransfer.files));
 
+/* ---------------- Recorrido guiado ----------------
+   Se muestra al abrir Navestigio hasta que el usuario marca «No volver a mostrar» o lo termina; el botón «Recorrido
+   guiado» lo repite cuando quiera. La preferencia se guarda solo en este navegador. Cada paso ilumina un elemento de la
+   interfaz; si ese elemento no está a la vista (por ejemplo, otra edición lo movió), el paso se salta o se muestra
+   centrado. Funciona con los datos de ejemplo, así que no hace falta abrir evidencia. Otras ediciones agregan o
+   cambian pasos sobre TOUR.steps (cada paso tiene un id). */
+const TOUR_KEY = "navestigio_tour";
+const TOUR = {
+  steps: [
+    {id: "inicio", title: "Bienvenido a Navestigio", text: "Este recorrido de un minuto le muestra lo esencial. Ya hay datos de ejemplo cargados para que pruebe cada función sin abrir evidencia real."},
+    {id: "abrir", el: () => [$("btnFiles"), $("btnFolder")], title: "Abra la evidencia",
+      text: "Cargue archivos sueltos (History, Cookies, Login Data, places.sqlite…) o la carpeta completa del perfil. También puede arrastrarlos a la ventana. Incluya los -wal si existen. Todo se procesa en este navegador y la evidencia original no se modifica."},
+    {id: "lateral", el: () => $("side"), title: "Caso y evidencias",
+      text: "Arriba está el análisis del caso: resumen, línea de tiempo unificada, hallazgos marcados, registros recuperados e indicadores de integridad. Debajo, cada evidencia con sus vistas destacadas (★) y todas sus tablas."},
+    {id: "resumen", before: () => tourView("s:resumen"), el: () => $("summary"), title: "Resumen del caso",
+      text: "Cifras clave, indicadores de integridad por prioridad, gráficas de actividad y los sitios más visitados. Haga clic en cualquier elemento para ir a los registros que lo respaldan."},
+    {id: "linea", before: () => tourView("s:timeline"), el: () => $("grid"), title: "Línea de tiempo unificada",
+      text: "Todos los eventos de todas las evidencias en orden. Las fechas convertidas a su zona horaria van en verde, junto al valor original. Las etiquetas señalan coincidencias con las reglas de alerta. Doble clic en una fila abre el detalle."},
+    {id: "marcar", el: () => $("grid").querySelector(".star"), title: "Marque hallazgos",
+      text: "La estrella pasa la fila a «Hallazgos marcados». En el detalle de la fila puede agregarle una nota. Los hallazgos viajan en la exportación con su SHA-256."},
+    {id: "filtros", el: () => [$("q"), $("fbar")], title: "Busque y filtre",
+      text: "Busque en todas las columnas, limite por rango de fechas y muestre solo las filas con alerta de una categoría."},
+    {id: "exportar", el: () => [$("expFmt"), $("btnCsv"), $("btnZip")], title: "Exporte con hashes",
+      text: "Exporte la vista con el filtro aplicado en CSV, JSONL, bodyfile o l2t, o todo en un ZIP con SHA-256, manifiesto y cadena de custodia."},
+    {id: "captura", el: () => $("btnCapture"), title: "Modo captura",
+      text: "Oculta los paneles para tomar pantallazos limpios, con la procedencia de cada registro. Esc para salir."},
+    {id: "ajustes", el: () => [$("tz"), $("sep"), $("btnRules")], title: "Zona horaria y reglas",
+      text: "Elija la zona horaria en la que se muestran todas las fechas y el separador del CSV. En «Reglas de alerta» decide qué palabras, dominios y extensiones se señalan."},
+    {id: "fin", el: () => $("btnTour"), center: true, title: "Listo para investigar",
+      text: "Puede repetir este recorrido cuando quiera con el botón «Recorrido guiado»."}],
+  onStart: [], onEnd: []
+};
+const TOUR_RUN = {on: false, i: 0, list: [], back: null, from: null};
+const tourHidden = () => { try { return localStorage.getItem(TOUR_KEY) === "oculto"; } catch (e) { return false; } };
+const tourRemember = no => { try { if (no) localStorage.setItem(TOUR_KEY, "oculto"); else localStorage.removeItem(TOUR_KEY); } catch (e) {} };
+const tourFrame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+async function tourView(sid) {
+  if (S.db !== "caso" || S.src !== sid) pick("caso", sid);
+  if (sid === "s:resumen") return;
+  for (let i = 0; i < 40 && !$("grid").querySelector("tbody tr"); i++) await new Promise(r => setTimeout(r, 75));
+}
+function tourEls(st) {
+  if (!st.el) return [];
+  let v; try { v = st.el(); } catch (e) { v = null; }
+  return [].concat(v || []).filter(el => el && el.getClientRects().length && el.getBoundingClientRect().width > 0 && !el.closest(".hide"));
+}
+function tourRect(els) {
+  if (!els.length) return null;
+  const rs = els.map(el => el.getBoundingClientRect()), P = 6;
+  const r = {l: Math.min(...rs.map(x => x.left)) - P, t: Math.min(...rs.map(x => x.top)) - P, r: Math.max(...rs.map(x => x.right)) + P, b: Math.max(...rs.map(x => x.bottom)) + P};
+  r.l = Math.max(4, r.l); r.t = Math.max(4, r.t); r.r = Math.min(innerWidth - 4, r.r); r.b = Math.min(innerHeight - 4, r.b);
+  return r.r > r.l && r.b > r.t ? r : null;
+}
+function tourPlace() {
+  if (!TOUR_RUN.on) return;
+  const st = TOUR_RUN.list[TOUR_RUN.i], hole = $("tourHole"), card = $("tourCard"), M = 12, G = 14;
+  const r = tourRect(tourEls(st)), vw = innerWidth, vh = innerHeight, cw = card.offsetWidth, ch = card.offsetHeight;
+  const clampX = x => Math.max(M, Math.min(vw - cw - M, x)), clampY = y => Math.max(M, Math.min(vh - ch - M, y));
+  hole.classList.toggle("none", !r);
+  if (!r) {
+    Object.assign(hole.style, {left: vw / 2 + "px", top: vh / 2 + "px", width: "0px", height: "0px"});
+    Object.assign(card.style, {left: clampX((vw - cw) / 2) + "px", top: clampY((vh - ch) / 2) + "px"}); return;
+  }
+  Object.assign(hole.style, {left: r.l + "px", top: r.t + "px", width: r.r - r.l + "px", height: r.b - r.t + "px"});
+  let x, y;
+  if (r.b + G + ch <= vh - M) { y = r.b + G; x = r.l; }                         // debajo
+  else if (r.t - G - ch >= M) { y = r.t - G - ch; x = r.l; }                    // encima
+  else if (r.r + G + cw <= vw - M) { x = r.r + G; y = r.t; }                    // a la derecha
+  else if (r.l - G - cw >= M) { x = r.l - G - cw; y = r.t; }                    // a la izquierda
+  else { x = r.r - cw - M * 2; y = r.b - ch - M * 2; }                          // dentro, en la esquina inferior derecha
+  Object.assign(card.style, {left: clampX(x) + "px", top: clampY(y) + "px"});
+}
+async function tourShow(i, dir) {
+  const L = TOUR_RUN.list;
+  while (i >= 0 && i < L.length) {                                             // salta los pasos cuyo elemento no está a la vista
+    const st = L[i];
+    if (st.before) { try { await st.before(); } catch (e) { console.warn("recorrido:", e); } await tourFrame(); }
+    if (!st.el || st.center || tourEls(st).length) break;
+    i += dir || 1;
+  }
+  if (!TOUR_RUN.on) return;
+  if (i < 0 || i >= L.length) { tourEnd(i >= L.length); return; }
+  TOUR_RUN.i = i;
+  const st = L[i], card = $("tourCard"), last = i === L.length - 1;
+  const els = tourEls(st); if (els[0]) els[0].scrollIntoView({block: "nearest", inline: "nearest"});
+  $("tourN").textContent = `Paso ${i + 1} de ${L.length}`;
+  $("tourT").textContent = st.title; $("tourB").textContent = st.text;
+  $("tourP").firstElementChild.style.width = `${Math.round((i + 1) / L.length * 100)}%`;
+  $("tourPrev").textContent = i === 0 ? "Ahora no" : "Anterior";
+  $("tourNext").textContent = i === 0 ? "Empezar" : last ? "Terminar" : "Siguiente";
+  card.classList.remove("enter"); void card.offsetWidth; card.classList.add("enter");
+  tourPlace();
+  $("tourNext").focus({preventScroll: true});
+}
+async function tourStart(auto) {
+  if (TOUR_RUN.on || document.body.classList.contains("busy")) return;
+  if (document.body.classList.contains("capture")) setCapture(false);
+  $("detail").classList.add("hide");
+  TOUR.onStart.forEach(f => { try { f(); } catch (e) {} });
+  Object.assign(TOUR_RUN, {on: true, list: TOUR.steps.slice(), back: {db: S.db, src: S.src}, from: auto ? null : document.activeElement});
+  $("tourNo").checked = tourHidden();
+  $("tour").classList.remove("hide");
+  await tourShow(0, 1);
+}
+function tourEnd(done) {
+  if (!TOUR_RUN.on) return;
+  TOUR_RUN.on = false;
+  if (done || $("tourNo").checked) tourRemember(true);
+  $("tour").classList.add("hide");
+  const b = TOUR_RUN.back;
+  if (b && (S.db !== b.db || S.src !== b.src) && S.dbs.some(d => d.id === b.db)) pick(b.db, b.src);
+  TOUR.onEnd.forEach(f => { try { f(); } catch (e) {} });
+  const f = TOUR_RUN.from && document.contains(TOUR_RUN.from) ? TOUR_RUN.from : $("btnTour");
+  if (f && f.getClientRects().length) f.focus({preventScroll: true});
+  if (done) toast("Recorrido terminado. Puede repetirlo con «Recorrido guiado».");
+}
+$("btnTour").onclick = () => tourStart(false);
+$("tourNext").onclick = () => tourShow(TOUR_RUN.i + 1, 1);
+$("tourPrev").onclick = () => TOUR_RUN.i === 0 ? tourEnd(false) : tourShow(TOUR_RUN.i - 1, -1);
+$("tourX").onclick = () => tourEnd(false);
+$("tourNo").onchange = e => tourRemember(e.target.checked);
+addEventListener("resize", () => tourPlace());
+addEventListener("scroll", () => tourPlace(), true);
+// Teclado: Esc sale, flechas avanzan y retroceden, Tab no sale de la tarjeta. Va en captura para que Esc no cierre otras cosas.
+addEventListener("keydown", e => {
+  if (!TOUR_RUN.on) return;
+  if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); tourEnd(false); return; }
+  if ((e.key === "ArrowRight" || e.key === "ArrowLeft") && e.target.id !== "tourNo") {
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (e.key === "ArrowRight") $("tourNext").click(); else if (TOUR_RUN.i > 0) $("tourPrev").click(); return; }
+  if (e.key === "Tab") {
+    const f = [...$("tourCard").querySelectorAll("button,input")].filter(x => x.getClientRects().length);
+    const i = f.indexOf(document.activeElement);
+    e.preventDefault(); e.stopImmediatePropagation();
+    f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus(); return; }
+  if (!$("tour").contains(e.target)) { e.preventDefault(); e.stopImmediatePropagation(); }   // atajos de la página quedan en pausa
+}, true);
+
 /* ---------------- Datos de ejemplo ---------------- */
 async function sampleHistory() {
   const wk = s => (BigInt(Date.parse(s)) * 1000n + 11644473600000000n).toString();
@@ -1434,5 +1572,6 @@ function sampleBookmarks() {
     await loadJsonEvidence("Bookmarks", "Datos de ejemplo generados por la herramienta", new TextEncoder().encode(sampleBookmarks()));
     S.dbs[S.dbs.length - 1].sample = true;
     await rebuildCase(); pick("caso", "s:resumen");
+    if (!tourHidden()) setTimeout(() => tourStart(true), 500);
   } catch (e) { $("loading").textContent = "No se pudo cargar el motor SQLite: " + (e.message || e); }
 })();

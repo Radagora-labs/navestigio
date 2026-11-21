@@ -262,6 +262,33 @@ th.conv{background-image:linear-gradient(90deg,transparent,color-mix(in srgb,var
 #drop.over{border-color:transparent;animation:dropGlow 1s linear infinite;background-size:100% 100%,200% 100%}
 @keyframes dropGlow{to{background-position:0 0,200% 0}}
 body.capture header,body.capture #scanline{animation:none}
+/* Recorrido guiado: oscurece la página, ilumina un elemento y explica qué hace */
+#tour{position:fixed;inset:0;z-index:40}
+#tourHole{position:fixed;border-radius:10px;box-shadow:0 0 0 200vmax rgba(5,8,12,.74);outline:2px solid var(--accent);outline-offset:0;pointer-events:none;
+  transition:top .3s var(--ease),left .3s var(--ease),width .3s var(--ease),height .3s var(--ease),border-radius .3s}
+#tourHole::after{content:"";position:absolute;inset:-2px;border-radius:inherit;box-shadow:0 0 0 0 color-mix(in srgb,var(--time) 55%,transparent);animation:tourRing 2.2s ease-out infinite}
+#tourHole.none{outline-color:transparent}
+#tourHole.none::after{animation:none}
+@keyframes tourRing{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--time) 55%,transparent)}70%,100%{box-shadow:0 0 0 12px transparent}}
+#tourCard{position:fixed;width:min(390px,calc(100vw - 24px));background:var(--panel);border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:14px;
+  padding:16px 18px 14px;box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.2);transition:top .3s var(--ease),left .3s var(--ease)}
+#tourCard.enter{animation:tourIn .35s var(--ease)}
+@keyframes tourIn{from{opacity:0;transform:translateY(6px) scale(.98)}}
+#tourCard .thead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}
+#tourN{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--time)}
+#tourX{background:transparent;padding:2px 8px;color:var(--muted);font-size:15px;line-height:1}
+#tourX:hover{color:var(--fg)}
+#tourT{margin:0 0 6px;font:800 19px/1.2 var(--display);letter-spacing:-.01em;text-wrap:balance}
+#tourB{margin:0;color:color-mix(in srgb,var(--fg) 86%,var(--muted));font-size:14px;line-height:1.5}
+#tourK{margin:8px 0 0;font-size:12px;color:var(--muted)}
+#tourP{height:3px;border-radius:3px;background:var(--line);margin:14px 0 12px;overflow:hidden}
+#tourP i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--time));transition:width .3s var(--ease)}
+#tourCard .tfoot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+#tourCard .tno{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer}
+#tourCard .tno input{accent-color:var(--accent);width:15px;height:15px;margin:0}
+#tourCard .tbtns{display:flex;gap:8px;margin-left:auto}
+@media (max-width:600px){#tourCard{left:12px!important;right:12px;width:auto}}
+@media (pointer:coarse){#tourK{display:none}}
 /* Resumen del caso */
 #summary{max-width:1180px}
 #summary h2{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.01em}
@@ -324,7 +351,7 @@ img.thumb{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin
 <body>
 
 <header>
-  <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot d1" cx="14" cy="37" r="2.2"/><circle class="dot d2" cx="20.5" cy="32.5" r="2.7"/><circle class="dot d3" cx="27" cy="29" r="3.2"/><circle class="dot d4" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg><h1 class="wordmark"><b>Navestigio</b><small>Forense de navegadores · v3.4.2 · <a href="https://github.com/navestigio/navestigio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title="© 2026 Oscar Stiven Garay Acosta. Todos los derechos reservados. Uso gratuito según la licencia de Navestigio, sin ninguna garantía. Prohibido modificar o redistribuir.">Licencia</a></small></h1></div>
+  <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot d1" cx="14" cy="37" r="2.2"/><circle class="dot d2" cx="20.5" cy="32.5" r="2.7"/><circle class="dot d3" cx="27" cy="29" r="3.2"/><circle class="dot d4" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg><h1 class="wordmark"><b>Navestigio</b><small>Forense de navegadores · v3.5.0 · <a href="https://github.com/navestigio/navestigio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title="© 2026 Oscar Stiven Garay Acosta. Todos los derechos reservados. Uso gratuito según la licencia de Navestigio, sin ninguna garantía. Prohibido modificar o redistribuir.">Licencia</a></small></h1></div>
   <button class="primary" id="btnFiles" type="button">Abrir archivos…</button>
   <button id="btnFolder" type="button" title="Seleccione la carpeta del perfil (ej. …\User Data\Default)">Abrir carpeta de perfil…</button>
   <input id="files" type="file" multiple class="hide">
@@ -334,6 +361,7 @@ img.thumb{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin
   <button id="btnRules" type="button">Reglas de alerta</button>
   <button id="btnClearMarks" type="button" title="Borra de este navegador los hallazgos marcados de las evidencias abiertas">Borrar hallazgos</button>
   <button id="btnConv" type="button">Convertir valores</button>
+  <button id="btnTour" type="button" title="Muestra el recorrido guiado por las funciones principales de Navestigio">Recorrido guiado</button>
   <button id="btnInstall" type="button" class="hide" title="Instala Navestigio como aplicación: ventana propia e ícono para anclar a la barra de tareas">Instalar app</button>
 </header>
 <div id="loading" class="notice">Preparando el motor SQLite…</div>
@@ -404,6 +432,17 @@ img.thumb{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin
 <div id="toast" class="hide" role="status"></div>
 <div id="tip" role="tooltip"></div>
 <div id="busy" aria-live="polite"><div class="card"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot d1" cx="14" cy="37" r="2.2"/><circle class="dot d2" cx="20.5" cy="32.5" r="2.7"/><circle class="dot d3" cx="27" cy="29" r="3.2"/><circle class="dot d4" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg><span id="busyMsg">Procesando…</span><button id="btnCancelQ" type="button" title="Detiene la consulta, reinicia el motor SQLite y vuelve a abrir las evidencias">Cancelar</button></div></div>
+<div id="tour" class="hide" role="dialog" aria-modal="true" aria-labelledby="tourT" aria-describedby="tourB">
+  <div id="tourHole" class="none"></div>
+  <div id="tourCard">
+    <div class="thead"><span id="tourN"></span><button id="tourX" type="button" aria-label="Cerrar el recorrido" title="Cerrar el recorrido (Esc)">✕</button></div>
+    <div aria-live="polite"><h2 id="tourT"></h2><p id="tourB"></p></div>
+    <p id="tourK">Use ← y → para avanzar o retroceder, y Esc para salir.</p>
+    <div id="tourP"><i></i></div>
+    <div class="tfoot"><label class="tno" for="tourNo"><input id="tourNo" type="checkbox"> No volver a mostrar</label>
+      <div class="tbtns"><button id="tourPrev" type="button">Anterior</button><button id="tourNext" class="primary" type="button">Siguiente</button></div></div>
+  </div>
+</div>
 <button id="exitCapture" type="button">Salir del modo captura (Esc)</button>
 
 <!-- Motor SQLite: este bloque no se ejecuta en la página; se carga en un Web Worker (ver src/worker.js) -->
@@ -2038,11 +2077,11 @@ async function fmtFor(db, sid, t, f, kind) {
 /* ---------------- Paquete de entrega verificable ----------------
    El ZIP lleva: CSV por tabla, la cadena de custodia en texto, manifest.json (cadena de custodia en formato de máquina) y
    SHA256SUMS.txt con el hash de cada archivo del paquete, verificable con «sha256sum -c SHA256SUMS.txt». */
-const BUILD_ID = "7a1db797d65014a86f2844e5c312899a1ba31bbd46184ca3a5d01a663552aaba";
+const BUILD_ID = "fcfc9d1d8ce2a1b13cb9cb91d83c21e222d0f09bb6b24030f7d56e4f97e9907b";
 async function exportZip() {
   const db = cur(); if (!db) return;
   const t = tz(), entries = [], dbs = db.virtual ? realDbs() : [db], files = [];
-  const lines = [`Navestigio v3.4.2 · forense de navegadores · compilación ${BUILD_ID.slice(0, 16)}`, `Generado: ${nowLocal()} (${tzLabel(t)})`, `Evidencia: ${db.path}${db.sample ? " (DATOS DE EJEMPLO)" : ""}`,
+  const lines = [`Navestigio v3.5.0 · forense de navegadores · compilación ${BUILD_ID.slice(0, 16)}`, `Generado: ${nowLocal()} (${tzLabel(t)})`, `Evidencia: ${db.path}${db.sample ? " (DATOS DE EJEMPLO)" : ""}`,
     "Hashes de la evidencia original (SHA-256 · MD5):", ...dbs.flatMap(d => d.hashes.map(([k, v, m]) => `  ${k}  ${v}  ${m || ""}`))];
   for (const d of dbs) if (d.walInfo) lines.push(`WAL aplicado (${d.label}): ${d.walInfo.commits} transacciones, ${d.walInfo.frames} frames, ${d.walInfo.pages} páginas${d.walInfo.note ? " · " + d.walInfo.note : ""}`);
   const ir = dbs.flatMap(integrityRows).sort((a, b) => ({Alta: 0, Media: 1}[a[4]] ?? 2) - ({Alta: 0, Media: 1}[b[4]] ?? 2)), sc = scopeInfo();
@@ -2071,7 +2110,7 @@ async function exportZip() {
   const sums = []; for (const [n, d] of entries) { const b = bytesOf(d); sums.push({archivo: n, bytes: b.length, sha256: await sha256(b)}); }
   const manifest = {
     formato: "navestigio-manifest/1",
-    herramienta: {nombre: "Navestigio", version: "3.4.2", compilacion: BUILD_ID, sqlite: sqliteVer, navegador: navigator.userAgent},
+    herramienta: {nombre: "Navestigio", version: "3.5.0", compilacion: BUILD_ID, sqlite: sqliteVer, navegador: navigator.userAgent},
     generado: {utc: new Date().toISOString(), local: nowLocal(), zona_horaria: tzLabel(t), regla_zona: typeof t === "string" ? "zona IANA, con horario de verano" : "desfase fijo, sin horario de verano"},
     exportacion: {vista: db.virtual ? "Análisis del caso" : db.label, filtros: "ninguno: el ZIP exporta las tablas completas"},
     evidencias: dbs.map(d => ({nombre: d.label, ruta: d.path, bytes: d.size, datos_de_ejemplo: !!d.sample, tipo: d.json ? "JSON" : "SQLite",
@@ -2438,6 +2477,144 @@ const drop = $("drop");
 ["dragleave", "drop"].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
 document.addEventListener("drop", e => openFiles(e.dataTransfer.files));
 
+/* ---------------- Recorrido guiado ----------------
+   Se muestra al abrir Navestigio hasta que el usuario marca «No volver a mostrar» o lo termina; el botón «Recorrido
+   guiado» lo repite cuando quiera. La preferencia se guarda solo en este navegador. Cada paso ilumina un elemento de la
+   interfaz; si ese elemento no está a la vista (por ejemplo, otra edición lo movió), el paso se salta o se muestra
+   centrado. Funciona con los datos de ejemplo, así que no hace falta abrir evidencia. Otras ediciones agregan o
+   cambian pasos sobre TOUR.steps (cada paso tiene un id). */
+const TOUR_KEY = "navestigio_tour";
+const TOUR = {
+  steps: [
+    {id: "inicio", title: "Bienvenido a Navestigio", text: "Este recorrido de un minuto le muestra lo esencial. Ya hay datos de ejemplo cargados para que pruebe cada función sin abrir evidencia real."},
+    {id: "abrir", el: () => [$("btnFiles"), $("btnFolder")], title: "Abra la evidencia",
+      text: "Cargue archivos sueltos (History, Cookies, Login Data, places.sqlite…) o la carpeta completa del perfil. También puede arrastrarlos a la ventana. Incluya los -wal si existen. Todo se procesa en este navegador y la evidencia original no se modifica."},
+    {id: "lateral", el: () => $("side"), title: "Caso y evidencias",
+      text: "Arriba está el análisis del caso: resumen, línea de tiempo unificada, hallazgos marcados, registros recuperados e indicadores de integridad. Debajo, cada evidencia con sus vistas destacadas (★) y todas sus tablas."},
+    {id: "resumen", before: () => tourView("s:resumen"), el: () => $("summary"), title: "Resumen del caso",
+      text: "Cifras clave, indicadores de integridad por prioridad, gráficas de actividad y los sitios más visitados. Haga clic en cualquier elemento para ir a los registros que lo respaldan."},
+    {id: "linea", before: () => tourView("s:timeline"), el: () => $("grid"), title: "Línea de tiempo unificada",
+      text: "Todos los eventos de todas las evidencias en orden. Las fechas convertidas a su zona horaria van en verde, junto al valor original. Las etiquetas señalan coincidencias con las reglas de alerta. Doble clic en una fila abre el detalle."},
+    {id: "marcar", el: () => $("grid").querySelector(".star"), title: "Marque hallazgos",
+      text: "La estrella pasa la fila a «Hallazgos marcados». En el detalle de la fila puede agregarle una nota. Los hallazgos viajan en la exportación con su SHA-256."},
+    {id: "filtros", el: () => [$("q"), $("fbar")], title: "Busque y filtre",
+      text: "Busque en todas las columnas, limite por rango de fechas y muestre solo las filas con alerta de una categoría."},
+    {id: "exportar", el: () => [$("expFmt"), $("btnCsv"), $("btnZip")], title: "Exporte con hashes",
+      text: "Exporte la vista con el filtro aplicado en CSV, JSONL, bodyfile o l2t, o todo en un ZIP con SHA-256, manifiesto y cadena de custodia."},
+    {id: "captura", el: () => $("btnCapture"), title: "Modo captura",
+      text: "Oculta los paneles para tomar pantallazos limpios, con la procedencia de cada registro. Esc para salir."},
+    {id: "ajustes", el: () => [$("tz"), $("sep"), $("btnRules")], title: "Zona horaria y reglas",
+      text: "Elija la zona horaria en la que se muestran todas las fechas y el separador del CSV. En «Reglas de alerta» decide qué palabras, dominios y extensiones se señalan."},
+    {id: "fin", el: () => $("btnTour"), center: true, title: "Listo para investigar",
+      text: "Puede repetir este recorrido cuando quiera con el botón «Recorrido guiado»."}],
+  onStart: [], onEnd: []
+};
+const TOUR_RUN = {on: false, i: 0, list: [], back: null, from: null};
+const tourHidden = () => { try { return localStorage.getItem(TOUR_KEY) === "oculto"; } catch (e) { return false; } };
+const tourRemember = no => { try { if (no) localStorage.setItem(TOUR_KEY, "oculto"); else localStorage.removeItem(TOUR_KEY); } catch (e) {} };
+const tourFrame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+async function tourView(sid) {
+  if (S.db !== "caso" || S.src !== sid) pick("caso", sid);
+  if (sid === "s:resumen") return;
+  for (let i = 0; i < 40 && !$("grid").querySelector("tbody tr"); i++) await new Promise(r => setTimeout(r, 75));
+}
+function tourEls(st) {
+  if (!st.el) return [];
+  let v; try { v = st.el(); } catch (e) { v = null; }
+  return [].concat(v || []).filter(el => el && el.getClientRects().length && el.getBoundingClientRect().width > 0 && !el.closest(".hide"));
+}
+function tourRect(els) {
+  if (!els.length) return null;
+  const rs = els.map(el => el.getBoundingClientRect()), P = 6;
+  const r = {l: Math.min(...rs.map(x => x.left)) - P, t: Math.min(...rs.map(x => x.top)) - P, r: Math.max(...rs.map(x => x.right)) + P, b: Math.max(...rs.map(x => x.bottom)) + P};
+  r.l = Math.max(4, r.l); r.t = Math.max(4, r.t); r.r = Math.min(innerWidth - 4, r.r); r.b = Math.min(innerHeight - 4, r.b);
+  return r.r > r.l && r.b > r.t ? r : null;
+}
+function tourPlace() {
+  if (!TOUR_RUN.on) return;
+  const st = TOUR_RUN.list[TOUR_RUN.i], hole = $("tourHole"), card = $("tourCard"), M = 12, G = 14;
+  const r = tourRect(tourEls(st)), vw = innerWidth, vh = innerHeight, cw = card.offsetWidth, ch = card.offsetHeight;
+  const clampX = x => Math.max(M, Math.min(vw - cw - M, x)), clampY = y => Math.max(M, Math.min(vh - ch - M, y));
+  hole.classList.toggle("none", !r);
+  if (!r) {
+    Object.assign(hole.style, {left: vw / 2 + "px", top: vh / 2 + "px", width: "0px", height: "0px"});
+    Object.assign(card.style, {left: clampX((vw - cw) / 2) + "px", top: clampY((vh - ch) / 2) + "px"}); return;
+  }
+  Object.assign(hole.style, {left: r.l + "px", top: r.t + "px", width: r.r - r.l + "px", height: r.b - r.t + "px"});
+  let x, y;
+  if (r.b + G + ch <= vh - M) { y = r.b + G; x = r.l; }                         // debajo
+  else if (r.t - G - ch >= M) { y = r.t - G - ch; x = r.l; }                    // encima
+  else if (r.r + G + cw <= vw - M) { x = r.r + G; y = r.t; }                    // a la derecha
+  else if (r.l - G - cw >= M) { x = r.l - G - cw; y = r.t; }                    // a la izquierda
+  else { x = r.r - cw - M * 2; y = r.b - ch - M * 2; }                          // dentro, en la esquina inferior derecha
+  Object.assign(card.style, {left: clampX(x) + "px", top: clampY(y) + "px"});
+}
+async function tourShow(i, dir) {
+  const L = TOUR_RUN.list;
+  while (i >= 0 && i < L.length) {                                             // salta los pasos cuyo elemento no está a la vista
+    const st = L[i];
+    if (st.before) { try { await st.before(); } catch (e) { console.warn("recorrido:", e); } await tourFrame(); }
+    if (!st.el || st.center || tourEls(st).length) break;
+    i += dir || 1;
+  }
+  if (!TOUR_RUN.on) return;
+  if (i < 0 || i >= L.length) { tourEnd(i >= L.length); return; }
+  TOUR_RUN.i = i;
+  const st = L[i], card = $("tourCard"), last = i === L.length - 1;
+  const els = tourEls(st); if (els[0]) els[0].scrollIntoView({block: "nearest", inline: "nearest"});
+  $("tourN").textContent = `Paso ${i + 1} de ${L.length}`;
+  $("tourT").textContent = st.title; $("tourB").textContent = st.text;
+  $("tourP").firstElementChild.style.width = `${Math.round((i + 1) / L.length * 100)}%`;
+  $("tourPrev").textContent = i === 0 ? "Ahora no" : "Anterior";
+  $("tourNext").textContent = i === 0 ? "Empezar" : last ? "Terminar" : "Siguiente";
+  card.classList.remove("enter"); void card.offsetWidth; card.classList.add("enter");
+  tourPlace();
+  $("tourNext").focus({preventScroll: true});
+}
+async function tourStart(auto) {
+  if (TOUR_RUN.on || document.body.classList.contains("busy")) return;
+  if (document.body.classList.contains("capture")) setCapture(false);
+  $("detail").classList.add("hide");
+  TOUR.onStart.forEach(f => { try { f(); } catch (e) {} });
+  Object.assign(TOUR_RUN, {on: true, list: TOUR.steps.slice(), back: {db: S.db, src: S.src}, from: auto ? null : document.activeElement});
+  $("tourNo").checked = tourHidden();
+  $("tour").classList.remove("hide");
+  await tourShow(0, 1);
+}
+function tourEnd(done) {
+  if (!TOUR_RUN.on) return;
+  TOUR_RUN.on = false;
+  if (done || $("tourNo").checked) tourRemember(true);
+  $("tour").classList.add("hide");
+  const b = TOUR_RUN.back;
+  if (b && (S.db !== b.db || S.src !== b.src) && S.dbs.some(d => d.id === b.db)) pick(b.db, b.src);
+  TOUR.onEnd.forEach(f => { try { f(); } catch (e) {} });
+  const f = TOUR_RUN.from && document.contains(TOUR_RUN.from) ? TOUR_RUN.from : $("btnTour");
+  if (f && f.getClientRects().length) f.focus({preventScroll: true});
+  if (done) toast("Recorrido terminado. Puede repetirlo con «Recorrido guiado».");
+}
+$("btnTour").onclick = () => tourStart(false);
+$("tourNext").onclick = () => tourShow(TOUR_RUN.i + 1, 1);
+$("tourPrev").onclick = () => TOUR_RUN.i === 0 ? tourEnd(false) : tourShow(TOUR_RUN.i - 1, -1);
+$("tourX").onclick = () => tourEnd(false);
+$("tourNo").onchange = e => tourRemember(e.target.checked);
+addEventListener("resize", () => tourPlace());
+addEventListener("scroll", () => tourPlace(), true);
+// Teclado: Esc sale, flechas avanzan y retroceden, Tab no sale de la tarjeta. Va en captura para que Esc no cierre otras cosas.
+addEventListener("keydown", e => {
+  if (!TOUR_RUN.on) return;
+  if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); tourEnd(false); return; }
+  if ((e.key === "ArrowRight" || e.key === "ArrowLeft") && e.target.id !== "tourNo") {
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (e.key === "ArrowRight") $("tourNext").click(); else if (TOUR_RUN.i > 0) $("tourPrev").click(); return; }
+  if (e.key === "Tab") {
+    const f = [...$("tourCard").querySelectorAll("button,input")].filter(x => x.getClientRects().length);
+    const i = f.indexOf(document.activeElement);
+    e.preventDefault(); e.stopImmediatePropagation();
+    f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus(); return; }
+  if (!$("tour").contains(e.target)) { e.preventDefault(); e.stopImmediatePropagation(); }   // atajos de la página quedan en pausa
+}, true);
+
 /* ---------------- Datos de ejemplo ---------------- */
 async function sampleHistory() {
   const wk = s => (BigInt(Date.parse(s)) * 1000n + 11644473600000000n).toString();
@@ -2483,6 +2660,7 @@ function sampleBookmarks() {
     await loadJsonEvidence("Bookmarks", "Datos de ejemplo generados por la herramienta", new TextEncoder().encode(sampleBookmarks()));
     S.dbs[S.dbs.length - 1].sample = true;
     await rebuildCase(); pick("caso", "s:resumen");
+    if (!tourHidden()) setTimeout(() => tourStart(true), 500);
   } catch (e) { $("loading").textContent = "No se pudo cargar el motor SQLite: " + (e.message || e); }
 })();
 

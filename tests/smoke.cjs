@@ -31,7 +31,28 @@ const sha256 = b => crypto.createHash("sha256").update(b).digest("hex"), md5 = b
   const browser = await chromium.launch();
   try {
     for (let i = 0; i < 50; i++) { try { if ((await fetch(BASE)).ok) break; } catch (e) {} await sleep(200); }
+    console.log("Recorrido guiado");
+    const ctxT = await browser.newContext({viewport: {width: 1400, height: 1000}}), pt = await ctxT.newPage(), eT = [];
+    pt.on("pageerror", e => eT.push(String(e)));
+    await pt.goto(BASE); await pt.waitForSelector("#tour:not(.hide)", {timeout: 30000}); await sleep(600);
+    ok(await pt.evaluate(() => document.activeElement.id === "tourNext" && /^Paso 1 de \d+$/.test(document.getElementById("tourN").textContent)), "aparece la primera vez, con el foco en «Empezar»");
+    await pt.keyboard.press("ArrowRight"); await sleep(600);
+    ok(await pt.evaluate(() => /^Paso 2 /.test(document.getElementById("tourN").textContent) && !document.getElementById("tourHole").classList.contains("none")), "las flechas avanzan e iluminan el elemento del paso");
+    await pt.keyboard.press("Escape"); await sleep(300);
+    ok(await pt.evaluate(() => document.getElementById("tour").classList.contains("hide") && localStorage.getItem("navestigio_tour") === null), "Esc lo cierra sin guardar la preferencia");
+    await pt.reload(); await pt.waitForSelector("#tour:not(.hide)", {timeout: 30000}); await sleep(600);
+    await pt.check("#tourNo"); await pt.click("#tourX"); await sleep(1500); await pt.reload();   // Chromium escribe el localStorage en lotes
+    await pt.waitForFunction(() => document.querySelectorAll(".db").length >= 3, null, {timeout: 30000}); await sleep(1200);
+    ok(await pt.evaluate(() => document.getElementById("tour").classList.contains("hide") && localStorage.getItem("navestigio_tour") === "oculto"), "con «No volver a mostrar» no aparece al abrir de nuevo");
+    await pt.click("#btnTour"); await sleep(600);
+    let steps = 0;
+    while (steps < 30 && await pt.evaluate(() => !document.getElementById("tour").classList.contains("hide"))) { await pt.click("#tourNext"); await sleep(450); steps++; }
+    ok(steps >= 8 && await pt.evaluate(() => S.src === "s:resumen"), `«Recorrido guiado» lo repite completo (${steps} pasos) y vuelve a la vista anterior`);
+    ok(eT.length === 0, "el recorrido no produce errores " + JSON.stringify(eT));
+    await ctxT.close();
+
     const ctx = await browser.newContext({acceptDownloads: true, viewport: {width: 1400, height: 1000}});
+    await ctx.addInitScript(() => { try { localStorage.setItem("navestigio_tour", "oculto"); } catch (e) {} });
     const page = await ctx.newPage(), pageErrors = [], cspErrors = [], external = [];
     page.on("pageerror", e => pageErrors.push(String(e)));
     page.on("console", m => { if (/Content Security Policy|Refused to/i.test(m.text())) cspErrors.push(m.text()); });
