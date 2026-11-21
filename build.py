@@ -23,7 +23,7 @@ import urllib.request
 import zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-VERSION = "3.4.2"  # única fuente del número de versión: al compilar se copia a README, la página y package.json
+VERSION = "3.5.0"  # única fuente del número de versión: al compilar se copia a README, la página y package.json
 # Dirección pública del sitio (docs/). Al pasar al dominio propio basta con cambiarla aquí, por ejemplo a
 # "https://navestigio.com/", y compilar: se actualizan la URL canónica, Open Graph, los datos estructurados,
 # hreflang, sitemap.xml y robots.txt, y se crea docs/CNAME para GitHub Pages.
