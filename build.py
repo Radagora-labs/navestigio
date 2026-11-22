@@ -98,7 +98,8 @@ def build_id():
     return h.hexdigest()
 
 
-SCRIPT_RE = re.compile(r"<script(\s[^>]*)?>(.*?)</script>", re.S | re.I)
+# Solo se aplica a la plantilla propia ya armada; build() rechaza código que contenga "</script".
+SCRIPT_RE = re.compile(r"<script\b([^>]*)>(.*?)</script\b[^>]*>", re.S | re.I)
 
 
 def script_hashes(html):
