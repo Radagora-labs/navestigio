@@ -27,7 +27,7 @@ VERSION = "3.5.0"  # única fuente del número de versión: al compilar se copia
 # Dirección pública del sitio (docs/). Al pasar al dominio propio basta con cambiarla aquí, por ejemplo a
 # "https://navestigio.com/", y compilar: se actualizan la URL canónica, Open Graph, los datos estructurados,
 # hreflang, sitemap.xml y robots.txt, y se crea docs/CNAME para GitHub Pages.
-SITE_URL = "https://navestigio.github.io/navestigio/"
+SITE_URL = "https://radagora-labs.github.io/navestigio/"
 SQLJS_VERSION = "1.15.2"
 # Integridad publicada por npm para sql.js@1.15.2 (campo dist.integrity del registro).
 SQLJS_INTEGRITY = "sha512-ZmMYFsZPZWDKIJUh3A5rdnpRV3hB/r7AijwAzSzLnfv/9CSx4obUmDtA8brAjWJWjGtUVh43nIEJ+6nl6HuOUg=="

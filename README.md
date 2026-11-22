@@ -257,7 +257,7 @@ Navestigio es gratuito. Si te ahorra tiempo en tus casos, puedes apoyar su desar
 
 ## Licencia
 
-© 2026 Oscar Stiven Garay Acosta. Todos los derechos reservados.
+© 2026 Radagora Labs. Todos los derechos reservados.
 
 Navestigio **no es software de código abierto**. Su código se publica para que puedas revisarlo y auditarlo, y puedes usar la herramienta gratis, también en tu trabajo. No está permitido modificarla, crear variantes, redistribuirla ni venderla. Para compartirla, comparte el enlace a este repositorio. Texto completo en [LICENSE](LICENSE).
 
