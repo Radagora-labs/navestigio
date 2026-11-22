@@ -1,4 +1,4 @@
-/*! Navestigio © 2026 Oscar Stiven Garay Acosta · Todos los derechos reservados · SPDX-License-Identifier: LicenseRef-Navestigio · uso según LICENSE; prohibido modificar o redistribuir */
+/*! Navestigio © 2026 Radagora Labs · Todos los derechos reservados · SPDX-License-Identifier: LicenseRef-Navestigio · uso según LICENSE; prohibido modificar o redistribuir */
 "use strict";
 const WASM_B64 = "@@WASM_B64@@";
 const $ = id => document.getElementById(id);

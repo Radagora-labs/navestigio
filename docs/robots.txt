@@ -3,4 +3,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://navestigio.github.io/navestigio/sitemap.xml
+Sitemap: https://radagora-labs.github.io/navestigio/sitemap.xml

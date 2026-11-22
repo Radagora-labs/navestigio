@@ -113,6 +113,10 @@ section[id]{scroll-margin-top:60px}
 @media (max-width:760px){.apoyo{grid-template-columns:1fr;padding:28px 22px}.apoyo .cta{min-width:0}}
 footer{border-top:1px solid var(--line);padding:32px 0 48px;color:var(--muted);font-size:14px}
 footer .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+.pie-marca-fila{justify-content:flex-start;margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.pie-marca{display:inline-flex;align-items:center;gap:14px;color:var(--muted);text-decoration:none;font-size:13px;letter-spacing:.02em}
+.pie-marca img{display:block;height:36px;width:auto;opacity:.92;transition:opacity .2s,transform .2s}
+.pie-marca:hover img{opacity:1;transform:translateY(-1px)}
 @media (max-width:900px){
   .hero,.split,.split.rev{grid-template-columns:1fr;gap:32px}
   .trail-art{max-width:220px;order:-1;justify-self:start}
