@@ -23,7 +23,7 @@ import urllib.request
 import zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-VERSION = "3.5.0"  # única fuente del número de versión: al compilar se copia a README, la página y package.json
+VERSION = "3.5.1"  # única fuente del número de versión: al compilar se copia a README, la página y package.json
 # Dirección pública del sitio (docs/). Al pasar al dominio propio basta con cambiarla aquí, por ejemplo a
 # "https://navestigio.com/", y compilar: se actualizan la URL canónica, Open Graph, los datos estructurados,
 # hreflang, sitemap.xml y robots.txt, y se crea docs/CNAME para GitHub Pages.
@@ -33,6 +33,9 @@ SQLJS_VERSION = "1.15.2"
 SQLJS_INTEGRITY = "sha512-ZmMYFsZPZWDKIJUh3A5rdnpRV3hB/r7AijwAzSzLnfv/9CSx4obUmDtA8brAjWJWjGtUVh43nIEJ+6nl6HuOUg=="
 
 # connect-src 'none': la página no puede enviar datos a ningún servidor.
+# script-src: al compilar, 'unsafe-inline' se reemplaza por el SHA-256 de cada <script> de la página (apply_csp), así que
+# un script o un manejador (onerror=…) que llegara a inyectarse no se ejecuta. La forma con 'unsafe-inline' queda solo
+# como base del encabezado de servir_navestigio.py: el navegador aplica las dos políticas y manda la más estricta.
 CSP = ("default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; "
        "img-src 'self' data: blob:; font-src data:; connect-src 'none'; manifest-src 'self'; worker-src 'self' blob:; "
        "base-uri 'none'; form-action 'none'; object-src 'none'")
@@ -95,6 +98,29 @@ def build_id():
     return h.hexdigest()
 
 
+SCRIPT_RE = re.compile(r"<script(\s[^>]*)?>(.*?)</script>", re.S | re.I)
+
+
+def script_hashes(html):
+    """SHA-256 (formato CSP) de cada <script> ejecutable; los type="text/plain" son datos para el Worker."""
+    out = []
+    for m in SCRIPT_RE.finditer(html):
+        t = re.search(r'\btype\s*=\s*"([^"]*)"', m.group(1) or "", re.I)
+        if t and t.group(1).lower() not in ("text/javascript", "module"):
+            continue
+        out.append("'sha256-" + base64.b64encode(hashlib.sha256(m.group(2).encode("utf-8")).digest()).decode() + "'")
+    return out
+
+
+def apply_csp(html, base=CSP):
+    """Inserta la CSP en <!--@@CSP@@--> con los hashes de los scripts del HTML ya armado. Va al final del armado."""
+    hashes = script_hashes(html)
+    if not hashes or "script-src 'unsafe-inline'" not in base or html.count("<!--@@CSP@@-->") != 1:
+        sys.exit("No se pudo armar la CSP con hashes")
+    csp = base.replace("script-src 'unsafe-inline'", "script-src " + " ".join(hashes))
+    return html.replace("<!--@@CSP@@-->", f'<meta http-equiv="Content-Security-Policy" content="{csp}">')
+
+
 def build():
     html = read("src", "navestigio.template.html").decode("utf-8")
     fonts = "".join(
@@ -108,7 +134,6 @@ def build():
             sys.exit(f"{name} contiene </script o <!--: no se puede incrustar")
     wasm = base64.b64encode(read("vendor", "sql.js", "sql-wasm.wasm")).decode()
     parts = {
-        "<!--@@CSP@@-->": f'<meta http-equiv="Content-Security-Policy" content="{CSP}">',
         "/*@@FONTS@@*/": "/* Fuentes: Bricolage Grotesque e IBM Plex (SIL OFL 1.1), ver THIRD_PARTY_NOTICES.md */\n" + fonts,
         "/*@@SQLJS@@*/": f"/* sql.js {SQLJS_VERSION} (MIT), ver THIRD_PARTY_NOTICES.md */\n" + sqljs,
         "/*@@WORKER@@*/": code["worker.js"],
@@ -122,6 +147,7 @@ def build():
         if k not in html:
             sys.exit(f"Falta el marcador {k} en la plantilla")
         html = html.replace(k, v)
+    html = apply_csp(html)
     out = path("app", "navestigio.html")
     with open(out, "w", encoding="utf-8", newline="\n") as f:
         f.write(html)

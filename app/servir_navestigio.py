@@ -39,6 +39,8 @@ FILES = {
 
 
 # Misma politica que la etiqueta <meta> de navestigio.html, mas frame-ancestors (que solo funciona como encabezado).
+# En la etiqueta, script-src lleva el SHA-256 de cada script en vez de 'unsafe-inline'; el navegador aplica las dos
+# politicas a la vez, asi que manda la de la etiqueta y este archivo no cambia en cada compilacion.
 # connect-src 'none': la pagina no puede enviar datos a ningun servidor, tampoco a este.
 CSP = ("default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; "
        "img-src 'self' data: blob:; font-src data:; connect-src 'none'; manifest-src 'self'; worker-src 'self' blob:; "

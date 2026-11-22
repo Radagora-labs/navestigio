@@ -183,6 +183,37 @@ const sha256 = b => crypto.createHash("sha256").update(b).digest("hex"), md5 = b
     }
     ok(pageErrors.length === 0 && await page.evaluate(() => !document.body.classList.contains("busy")), "la app sigue respondiendo después de los archivos manipulados " + JSON.stringify(pageErrors));
 
+    console.log("Datos con HTML (inyección) y CSP");
+    {
+      const ctxH = await browser.newContext({viewport: {width: 1400, height: 1000}});
+      await ctxH.addInitScript(() => { try { localStorage.setItem("navestigio_tour", "oculto"); } catch (e) {} });
+      const ph = await ctxH.newPage(), eH = [], dialogs = [];
+      ph.on("pageerror", e => eH.push(String(e))); ph.on("dialog", d => { dialogs.push(d.message()); d.dismiss(); });
+      await ph.goto(BASE); await ph.waitForFunction(() => document.querySelectorAll(".db").length >= 3, null, {timeout: 30000});
+      const meta = await ph.evaluate(() => document.querySelector('meta[http-equiv="Content-Security-Policy"]').content);
+      const scriptSrc = (meta.match(/script-src([^;]*)/) || [])[1] || "";
+      ok(!/unsafe-inline/.test(scriptSrc) && (scriptSrc.match(/'sha256-/g) || []).length === 2, "la CSP de la página permite solo sus 2 scripts por hash, sin 'unsafe-inline'");
+      await ph.evaluate(() => { const d = document.createElement("div"); d.innerHTML = '<img src="data:," onerror="window.__csp=1">'; document.body.appendChild(d); });
+      await sleep(500);
+      ok(await ph.evaluate(() => window.__csp === undefined), "un manejador en línea inyectado no se ejecuta (lo bloquea la CSP)");
+      await ph.setInputFiles("#folder", path.join(EV, "hostil"));
+      await ph.waitForFunction(() => !document.body.classList.contains("busy"), null, {timeout: 60000}); await sleep(2000);
+      await ph.evaluate(() => document.querySelectorAll("#side details").forEach(d => d.open = true));
+      const srcs = await ph.evaluate(() => [...document.querySelectorAll(".src[data-src]")].map(e => e.dataset.src).filter(s => s !== "t:infinita"));
+      for (const s of srcs) {
+        await ph.evaluate(s => document.querySelector(`.src[data-src="${CSS.escape(s)}"]`).click(), s); await sleep(250);
+        await ph.waitForFunction(() => !document.body.classList.contains("busy"), null, {timeout: 30000});
+        const row = await ph.$("#grid tbody tr[data-row]");
+        if (row && await row.isVisible()) { await row.dblclick({timeout: 5000}); await sleep(200); await ph.evaluate(() => document.getElementById("detail").classList.add("hide")); }
+      }
+      const inj = await ph.evaluate(() => ({xss: window.__xss, nodes: document.querySelectorAll("[onerror],[onload],[onmouseover]").length,
+        visible: document.body.innerText.includes('<img src=x onerror="window.__xss=1">')}));
+      ok(srcs.length > 10 && inj.xss === undefined && inj.nodes === 1 && inj.visible,
+        `${srcs.length} vistas y su detalle muestran el HTML de la evidencia como texto, sin crear elementos ` + JSON.stringify(inj));
+      ok(eH.length === 0 && dialogs.length === 0, "sin errores ni diálogos " + JSON.stringify(eH.concat(dialogs).slice(0, 3)));
+      await ctxH.close();
+    }
+
     console.log("Modo archivo local (doble clic)");
     const p2 = await ctx.newPage(), e2 = []; p2.on("pageerror", e => e2.push(String(e)));
     await p2.goto("file://" + path.join(APP, "navestigio.html").replace(/\\/g, "/")); await p2.waitForFunction(() => document.querySelectorAll(".db").length >= 3, null, {timeout: 30000});

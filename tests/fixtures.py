@@ -183,6 +183,49 @@ def user_folder(root):
     safari(os.path.join(saf, "History.db"))
 
 
+XSS = ['<img src=x onerror="window.__xss=1">', '"><svg onload=window.__xss=2>', "'><b onmouseover=window.__xss=3>x</b>"]
+
+
+def hostile_folder(root):
+    """Perfil de Chrome y Firefox cuyos datos traen HTML: nombres de tabla y columna, URL, títulos, cookies,
+    marcadores, pestañas y extensiones. La app debe mostrarlos como texto, nunca como HTML."""
+    if os.path.isdir(root):
+        shutil.rmtree(root)
+    chrome = os.path.join(root, "Default")
+    ff = os.path.join(root, "firefox.default-release")
+    for d in (os.path.join(chrome, "Network"), ff):
+        os.makedirs(d)
+    a, b, c3 = XSS
+    h = os.path.join(chrome, "History")
+    history(h)
+    con = sqlite3.connect(h)
+    con.execute("UPDATE urls SET url = ?, title = ? WHERE id = 1", ("https://x.example/?q=" + a, b))
+    con.execute("UPDATE urls SET url = ?, title = ? WHERE id = 2", ("https://www.google.com/search?q=" + c3, a))
+    q = lambda n: '"' + n.replace('"', '""') + '"'
+    con.execute(f"CREATE TABLE {q(a)}({q(b)} TEXT, {q(c3)} INTEGER)")
+    con.execute(f"INSERT INTO {q(a)} VALUES(?, ?)", (c3, 13300000000000000))
+    con.commit()
+    con.close()
+    k = os.path.join(chrome, "Network", "Cookies")
+    cookies(k)
+    con = sqlite3.connect(k)
+    con.execute("INSERT INTO cookies VALUES(?,?,?,?,?,?,?,?,?,?)", (webkit(T0), "." + b, a, c3, "/" + a, 0, 1, 0, webkit(T0 + 9), b""))
+    con.commit()
+    con.close()
+    with open(os.path.join(chrome, "Bookmarks"), "w", encoding="utf-8") as f:
+        json.dump({"roots": {"bookmark_bar": {"type": "folder", "name": a, "children": [
+            {"type": "url", "name": b, "url": "https://m.example/" + c3, "date_added": str(webkit(T0))}]}}}, f)
+    ext = os.path.join(chrome, "Extensions", "a" * 32, "1.0_0")
+    os.makedirs(ext)
+    with open(os.path.join(ext, "manifest.json"), "w", encoding="utf-8") as f:
+        json.dump({"manifest_version": 3, "name": a, "description": b, "version": "1.0", "permissions": [c3, "cookies"],
+                   "host_permissions": [b], "content_scripts": [{"matches": [a], "js": ["c.js"]}]}, f)
+    sess = {"version": ["sessionrestore", 1], "session": {"lastUpdate": T0 * 1000},
+            "windows": [{"tabs": [{"entries": [{"url": "https://t.example/" + a, "title": b}], "index": 1, "lastAccessed": T0 * 1000}]}]}
+    with open(os.path.join(ff, "sessionstore.jsonlz4"), "wb") as f:
+        f.write(mozlz4(json.dumps(sess).encode("utf-8")))
+
+
 def main():
     folder = sys.argv[1]
     os.makedirs(folder, exist_ok=True)
@@ -195,6 +238,7 @@ def main():
     malformed(folder, os.path.join(folder, "History"))
     user_folder(os.path.join(folder, "usuario"))
     mozlz4_hostiles(folder)
+    hostile_folder(os.path.join(folder, "hostil"))
     print(f"[+] evidencias de prueba en {folder}")
 
 
