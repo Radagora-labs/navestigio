@@ -32,7 +32,10 @@ jobs:
         run: git diff --exit-code -- app/navestigio.html README.md docs package.json && test -z "$(git status --porcelain -- docs)"
 
       - name: Revisar la sintaxis de los scripts de Python
-        run: python -m py_compile build.py app/servir_navestigio.py tests/fixtures.py
+        run: python -m py_compile build.py app/servir_navestigio.py tests/fixtures.py tests/servidor.py
+
+      - name: El servidor local solo atiende a la propia aplicación
+        run: python tests/servidor.py
 
       - name: Instalar Playwright y Chromium
         run: |

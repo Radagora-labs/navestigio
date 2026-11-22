@@ -47,18 +47,68 @@ CSP = ("default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style
 CSP_SW = "default-src 'none'; connect-src 'self'"
 
 
+MAX_CONEXIONES = 16  # conexiones atendidas a la vez; las demas esperan su turno
+
+
+class Servidor(http.server.ThreadingHTTPServer):
+    daemon_threads = True
+
+    def __init__(self, *a, **k):
+        super().__init__(*a, **k)
+        self._cupos = threading.BoundedSemaphore(MAX_CONEXIONES)
+
+    def process_request(self, request, client_address):
+        self._cupos.acquire()
+        try:
+            super().process_request(request, client_address)
+        except Exception:
+            self._cupos.release()
+            raise
+
+    def handle_error(self, request, client_address):
+        # Conexiones cortadas o que vencen el tiempo de espera: normales, no se llena la ventana de errores
+        if isinstance(sys.exc_info()[1], (TimeoutError, ConnectionError)):
+            return
+        super().handle_error(request, client_address)
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._cupos.release()
+
+
 class Handler(http.server.BaseHTTPRequestHandler):
     server_version = "Navestigio"
     sys_version = ""
+    timeout = 10  # una conexion lenta o abierta sin pedir nada se cierra a los 10 s
+
+    def _hosts(self):
+        port = self.server.server_address[1]
+        return (f"127.0.0.1:{port}", f"localhost:{port}")
 
     def _allowed_host(self):
         # Evita DNS rebinding: solo se responde si el navegador pidio 127.0.0.1 o localhost en este puerto.
-        port = self.server.server_address[1]
-        return self.headers.get("Host", "") in (f"127.0.0.1:{port}", f"localhost:{port}")
+        return self.headers.get("Host", "") in self._hosts()
+
+    def _allowed_origin(self):
+        # Otra pagina abierta en el navegador puede intentar pedir archivos a este servidor (con <img>, fetch, etc.).
+        # Solo se atiende lo que pide la propia Navestigio, lo que se escribe en la barra de direcciones y un enlace
+        # que abre la aplicacion en una pestaña (navegacion de nivel superior, que la otra pagina no puede leer).
+        origin = self.headers.get("Origin")
+        if origin is not None and origin not in tuple("http://" + h for h in self._hosts()):
+            return False
+        site = self.headers.get("Sec-Fetch-Site")
+        if site in (None, "same-origin", "none"):
+            return True
+        return self.headers.get("Sec-Fetch-Mode") == "navigate" and self.headers.get("Sec-Fetch-Dest") == "document"
 
     def _serve(self, body):
         if not self._allowed_host():
             self.send_error(400, "Host no permitido")
+            return
+        if not self._allowed_origin():
+            self.send_error(403, "Solicitud desde otro sitio")
             return
         path = self.path.split("?", 1)[0].split("#", 1)[0]
         entry = FILES.get(path)
@@ -76,6 +126,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+        self.send_header("Cross-Origin-Resource-Policy", "same-origin")
         self.send_header("X-Navestigio", "1")  # el service worker solo guarda respuestas con esta marca
         self.end_headers()
         if body:
@@ -86,6 +137,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         self._serve(False)
+
+    def _no_permitido(self):
+        # Este servidor solo entrega archivos: ningun metodo que envie o cambie datos
+        self.send_response(405)
+        self.send_header("Allow", "GET, HEAD")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    do_POST = do_PUT = do_DELETE = do_PATCH = do_OPTIONS = do_TRACE = do_CONNECT = _no_permitido
 
     def log_message(self, fmt, *args):
         pass
@@ -99,7 +159,7 @@ def main():
     if not os.path.isfile(os.path.join(HERE, "navestigio.html")):
         sys.exit("No encuentro navestigio.html junto a este script.")
     try:
-        srv = http.server.ThreadingHTTPServer(("127.0.0.1", a.port), Handler)
+        srv = Servidor(("127.0.0.1", a.port), Handler)
     except OSError:
         sys.exit(f"El puerto {a.port} esta ocupado. Cierra la otra ventana de Navestigio o usa --port 9000.")
     url = f"http://127.0.0.1:{a.port}/"

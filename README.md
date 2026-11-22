@@ -210,7 +210,7 @@ Las tablas `urls`, `downloads` y las demás de interés aparecen en negrita en l
 | `vendor/` | sql.js 1.15.2 (SQLite compilado a WebAssembly) y las fuentes, con sus licencias y `SHA256SUMS`. |
 | `build.py` | Genera `app/navestigio.html` a partir de `src/` y `vendor/`. |
 | `docs/` | La página del proyecto para GitHub Pages (`index.html` y `assets/`), sin scripts ni recursos externos. `assets/vista-previa.png` es la imagen para redes sociales. |
-| `tests/` | Pruebas automatizadas: `fixtures.py` genera evidencias sintéticas (con borrados conocidos y archivos malformados) y `smoke.cjs` las prueba en Chromium. |
+| `tests/` | Pruebas automatizadas: `fixtures.py` genera evidencias sintéticas (con borrados conocidos y archivos malformados), `smoke.cjs` las prueba en Chromium, `lz4.cjs` prueba el lector de sesiones de Firefox y `servidor.py` el servidor local. |
 | `.github/workflows/` | Ejecuta las pruebas en cada cambio. |
 
 `app/navestigio.html` es un único archivo de unos 1,3 MB porque incrusta sql.js, las fuentes y el código de `src/` para funcionar sin internet y con doble clic. Para comprobar que se construyó con los componentes oficiales, o para regenerarlo:
@@ -229,7 +229,8 @@ Cada cambio en GitHub ejecuta `.github/workflows/pruebas.yml`, que:
 
 1. compara sql.js de `vendor/` byte a byte con el paquete oficial de npm;
 2. regenera la app y falla si `app/navestigio.html` no coincide con `src/` (nadie puede publicar una app distinta del código fuente);
-3. abre en Chromium evidencias sintéticas y comprueba que detecta los borrados conocidos, interpreta búsquedas, sobrevive a archivos malformados y a una vista con recursión infinita, que el ZIP se verifica con `SHA256SUMS.txt` y que ninguna petición sale de 127.0.0.1.
+3. abre en Chromium evidencias sintéticas y comprueba que detecta los borrados conocidos, interpreta búsquedas, sobrevive a archivos malformados, a sesiones de Firefox manipuladas (bombas de descompresión mozLz4) y a una vista con recursión infinita, que el ZIP se verifica con `SHA256SUMS.txt` y que ninguna petición sale de 127.0.0.1;
+4. comprueba que `servir_navestigio.py` solo atiende a la propia aplicación: rechaza solicitudes de otros sitios, de otro `Host` y cualquier método distinto de GET y HEAD.
 
 Para ejecutarlas en tu equipo (requiere Node.js 20 o superior):
 
@@ -237,6 +238,7 @@ Para ejecutarlas en tu equipo (requiere Node.js 20 o superior):
 npm ci --ignore-scripts
 npx playwright install chromium
 npm test
+python tests/servidor.py
 ```
 
 Node.js y Playwright solo se usan para las pruebas; la aplicación no los necesita.
