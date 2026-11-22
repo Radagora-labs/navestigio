@@ -5,7 +5,7 @@
   "description": "Solo para las pruebas automatizadas; la aplicación no usa Node.",
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
-    "test": "node tests/smoke.cjs"
+    "test": "node tests/lz4.cjs && node tests/smoke.cjs"
   },
   "devDependencies": {
     "playwright": "1.63.0"

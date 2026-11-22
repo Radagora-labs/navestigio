@@ -41,7 +41,7 @@ const MOZLZ4 = [0x6d, 0x6f, 0x7a, 0x4c, 0x7a, 0x34, 0x30, 0x00];
 const isMozLz4 = b => b.length >= 12 && MOZLZ4.every((x, i) => b[i] === x);
 function mozLz4(b) {
   const n = (b[8] | b[9] << 8 | b[10] << 16 | b[11] << 24) >>> 0;
-  if (n > 512 * 1024 * 1024) throw new Error("mozLz4 declara un tamaño descomprimido imposible");
+  const bad = mozLz4Problem(n, b.length); if (bad) throw new Error("Sesión de Firefox no abierta: " + bad);
   const out = new Uint8Array(n); let i = 12, o = 0;
   const len = () => { let v = 0, x; do { if (i >= b.length) throw new Error("bloque LZ4 truncado"); x = b[i++]; v += x; } while (x === 255); return v; };
   while (i < b.length) {
@@ -55,7 +55,8 @@ function mozLz4(b) {
     if (!off || off > o || o + ml > n) throw new Error("bloque LZ4 inválido (referencia)");
     for (let k = 0; k < ml; k++, o++) out[o] = out[o - off];
   }
-  return out.subarray(0, o);
+  if (o !== n) throw new Error(`bloque LZ4 incompleto: produjo ${o} bytes y el encabezado declara ${n} (archivo truncado o dañado)`);
+  return out;
 }
 /* Pestañas de la sesión de Firefox: una fila por entrada del historial de cada pestaña (atrás/adelante); «actual» marca la que se veía */
 function sessionRows(obj) {

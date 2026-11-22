@@ -12,7 +12,8 @@ import sqlite3
 import struct
 import sys
 
-NAMES = ["History", "Cookies", "recursiva.sqlite", "basura.sqlite", "truncada.sqlite", "ConWal", "ConWal-wal", "Preferences"]
+NAMES = ["History", "Cookies", "recursiva.sqlite", "basura.sqlite", "truncada.sqlite", "ConWal", "ConWal-wal", "Preferences",
+         "encabezado-falso.jsonlz4", "bomba.jsonlz4"]
 T0 = 1767000000  # 29/12/2025 09:20:00 UTC
 
 
@@ -122,6 +123,17 @@ def mozlz4(data):
     return bytes(out + data)
 
 
+def mozlz4_hostiles(folder):
+    """Sesiones de Firefox manipuladas: un encabezado que declara 512 MiB y una bomba LZ4 válida de 129 MiB."""
+    with open(os.path.join(folder, "encabezado-falso.jsonlz4"), "wb") as f:
+        f.write(b"mozLz40\x00" + struct.pack("<I", 512 * 1024 * 1024) + bytes(20))
+    total = 129 * 1024 * 1024
+    ml = total - 5 - 15  # un literal «a» y una referencia de distancia 1 que lo repite
+    body = bytearray([0x1F, 0x61, 1, 0]) + bytes([255]) * (ml // 255) + bytes([ml % 255])
+    with open(os.path.join(folder, "bomba.jsonlz4"), "wb") as f:
+        f.write(b"mozLz40\x00" + struct.pack("<I", total) + bytes(body))
+
+
 def firefox_session(path):
     ms = T0 * 1000
     sess = {"version": ["sessionrestore", 1], "session": {"lastUpdate": ms + 9_000_000, "startTime": ms, "recentCrashes": 0},
@@ -182,6 +194,7 @@ def main():
     recursive_view(os.path.join(folder, "recursiva.sqlite"))
     malformed(folder, os.path.join(folder, "History"))
     user_folder(os.path.join(folder, "usuario"))
+    mozlz4_hostiles(folder)
     print(f"[+] evidencias de prueba en {folder}")
 
 

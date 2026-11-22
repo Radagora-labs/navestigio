@@ -596,6 +596,8 @@ $("summary").addEventListener("mouseleave", () => $("tip").classList.remove("on"
 const JSON_NAMES = new Set(["Bookmarks", "Preferences", "Secure Preferences", "Local State", "extensions.json"]);
 const LZ4_NAME = /\.(jsonlz4|baklz4)(-\d+)?$|^upgrade\.jsonlz4-/i;
 async function isMozLz4File(f) { if (f.size < 12) return false; return new TextDecoder("latin1").decode(await f.slice(0, 8).arrayBuffer()) === "mozLz40\u0000"; }
+// Comprueba el tamaño declarado antes de leer el archivo entero (ver mozLz4Problem en common.js)
+async function mozLz4Check(f) { if (!await isMozLz4File(f)) return ""; return mozLz4Problem(new DataView(await f.slice(8, 12).arrayBuffer()).getUint32(0, true), f.size); }
 /* Extensiones de Chromium: <perfil>/Extensions/<id>/<versión>/manifest.json. Se juntan por perfil en una sola evidencia;
    cada manifiesto conserva su propio SHA-256. Los nombres __MSG_x__ se resuelven con _locales/<idioma>/messages.json. */
 const EXT_RE = /^(.*?)(?:^|\/)Extensions\/([a-p]{32})\/([^/]+)\/manifest\.json$/;
@@ -744,8 +746,9 @@ async function openFilesInner(files) {
     } catch (e) { if (e.cancelled) return; toast(`${f.name}: ${e.message || e}`); }
   }
   for (const [path, f] of jsons) {
+    const bad = await mozLz4Check(f); if (bad) { toast(`${f.name}: sesión de Firefox no abierta: ${bad}.`); continue; }
     try { await busy(`Leyendo ${f.name}…`); const db = await loadJsonEvidence(f.name, path, new Uint8Array(await f.arrayBuffer()), async () => new Uint8Array(await f.arrayBuffer())); first = first || db; }
-    catch (e) { if (e.cancelled) return; toast(`${f.name}: no es un JSON válido (${e.message})`); }
+    catch (e) { if (e.cancelled) return; toast(/LZ4|Sesión de Firefox/.test(e.message) ? `${f.name}: ${e.message}` : `${f.name}: no es un JSON válido (${e.message})`); }
   }
   for (const [prefix, items] of exts) {
     try { await busy(`Leyendo ${nf(items.length)} manifiestos de extensiones…`); const db = await loadChromeExtensions(prefix, items, byName); first = first || db; }

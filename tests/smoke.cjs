@@ -174,6 +174,15 @@ const sha256 = b => crypto.createHash("sha256").update(b).digest("hex"), md5 = b
     ok(after.n === 0 && after.welcome && after.groups === 0 && after.tl === 0, "«Cerrar todas» deja el caso en limpio para el siguiente navegador " + JSON.stringify(after));
     ok(pageErrors.length === 0, "la barra lateral no produce errores " + JSON.stringify(pageErrors));
 
+    console.log("Sesiones de Firefox manipuladas (mozLz4)");
+    for (const [name, re] of [["encabezado-falso.jsonlz4", /no abierta: declara 512 MB descomprimidos, más que el límite de 128 MB/], ["bomba.jsonlz4", /no abierta: declara 129 MB/]]) {
+      await page.setInputFiles("#files", path.join(EV, name)); await sleep(800);
+      await page.waitForFunction(() => !document.body.classList.contains("busy"), null, {timeout: 30000});
+      const st = await page.evaluate(() => ({toast: document.getElementById("toast").textContent, n: realDbs().length}));
+      ok(re.test(st.toast) && st.n === 0, `${name}: se rechaza con un aviso claro antes de leerlo (${st.toast})`);
+    }
+    ok(pageErrors.length === 0 && await page.evaluate(() => !document.body.classList.contains("busy")), "la app sigue respondiendo después de los archivos manipulados " + JSON.stringify(pageErrors));
+
     console.log("Modo archivo local (doble clic)");
     const p2 = await ctx.newPage(), e2 = []; p2.on("pageerror", e => e2.push(String(e)));
     await p2.goto("file://" + path.join(APP, "navestigio.html").replace(/\\/g, "/")); await p2.waitForFunction(() => document.querySelectorAll(".db").length >= 3, null, {timeout: 30000});
