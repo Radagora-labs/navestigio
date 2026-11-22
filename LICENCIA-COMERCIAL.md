@@ -1,6 +1,6 @@
 # Licencia de Navestigio
 
-Navestigio es obra de Oscar Stiven Garay Acosta, su único autor y propietario. No es software libre ni de código abierto: su código está publicado para que cualquiera pueda revisarlo y auditarlo, pero los derechos sobre él son exclusivos de su autor. El texto completo está en [LICENSE](LICENSE).
+Navestigio es obra de Oscar Stiven Garay Acosta, que opera bajo la marca Radagora Labs, su único autor y propietario. No es software libre ni de código abierto: su código está publicado para que cualquiera pueda revisarlo y auditarlo, pero los derechos sobre él son exclusivos de su autor. El texto completo está en [LICENSE](LICENSE).
 
 ## Uso gratuito
 
