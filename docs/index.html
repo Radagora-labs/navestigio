@@ -141,12 +141,13 @@
   <h2>Empezar en tres pasos</h2>
   <p class="sub">No necesita instalar nada. Python es opcional: solo sirve para abrirla como aplicación en 127.0.0.1.</p>
   <ol class="steps">
-    <li><b>Descargue y verifique</b>Baje el zip de la última versión y compare su SHA-256 con el publicado en el release.</li>
+    <li><b>Descargue y verifique</b>Baje el zip de la última versión y compare su SHA-256 con el publicado en el release. Con <a href="https://github.com/jedisct1/minisign/releases">minisign</a> compruebe además la firma <code>.minisig</code>: prueba que el zip lo publicó Radagora Labs.</li>
     <li><b>Abra Navestigio</b>Doble clic en <code>iniciar_navestigio.bat</code>, o en <code>navestigio.html</code> en Chrome, Edge o Firefox. La primera vez, un recorrido guiado le muestra lo esencial con datos de ejemplo.</li>
     <li><b>Cargue la evidencia</b>Arrastre los archivos o abra la carpeta del perfil. Navestigio reconoce cada artefacto.</li>
   </ol>
   <pre><code>certutil -hashfile navestigio-3.5.1.zip SHA256      # Windows
-sha256sum -c navestigio-3.5.1.zip.sha256           # Linux o macOS</code></pre>
+sha256sum -c navestigio-3.5.1.zip.sha256           # Linux o macOS
+minisign -Vm navestigio-3.5.1.zip -P RWQ5FXNRNFAh3TWq8+wB/veBbwDpopCZ6pHOmGNZQG0fKIgME7t5q4OZ</code></pre>
 </div></section>
 
 <section id="apoyar"><div class="wrap">

@@ -23,6 +23,16 @@ Nos interesan especialmente:
 
 Las consultas corren en un Web Worker que se puede cancelar. Si una base malformada aun así congela la página (no solo una consulta), también nos interesa.
 
+## Verificar las descargas
+
+Desde la 3.5.1 cada zip de Releases va firmado con [minisign](https://github.com/jedisct1/minisign). La clave pública de Radagora Labs es:
+
+```
+RWQ5FXNRNFAh3TWq8+wB/veBbwDpopCZ6pHOmGNZQG0fKIgME7t5q4OZ
+```
+
+También está en [`navestigio.pub`](navestigio.pub). Compruébala con `minisign -Vm <zip> -P <clave>`. Si un zip no trae firma válida con esta clave, no lo uses y avísanos por el canal de arriba.
+
 ## Versiones con soporte
 
 La versión actual es la 3.5.1. Solo la última versión publicada en Releases recibe correcciones de seguridad.

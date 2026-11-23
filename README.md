@@ -16,6 +16,14 @@ Descarga `navestigio-<versión>.zip` desde la sección **Releases** del reposito
 certutil -hashfile navestigio-3.5.1.zip SHA256
 ```
 
+Desde la 3.5.1 cada release trae también la firma `navestigio-3.5.1.zip.minisig`, que prueba que el zip lo publicó Radagora Labs y no fue cambiado (el SHA-256 solo prueba que no se dañó). Para comprobarla, descarga [minisign](https://github.com/jedisct1/minisign/releases) y ejecuta en la carpeta del zip:
+
+```
+minisign -Vm navestigio-3.5.1.zip -P RWQ5FXNRNFAh3TWq8+wB/veBbwDpopCZ6pHOmGNZQG0fKIgME7t5q4OZ
+```
+
+Debe responder `Signature and comment signature verified`. Si no, no uses el archivo. La clave pública también está en [`navestigio.pub`](navestigio.pub) y en el sitio.
+
 ## Cómo usarla
 
 Ejecuta `iniciar_navestigio.bat`. Si tienes Python, lo sirve en http://127.0.0.1:8765 con `servir_navestigio.py` (así se ve el favicon) y abre el navegador; deja esa ventana abierta mientras trabajas. Sin Python, abre el HTML directamente. También se puede abrir con doble clic en Chrome, Edge o Firefox. Los hallazgos, reglas y anchos se guardan por dirección: los de 127.0.0.1 son distintos de los del archivo abierto con doble clic. No necesita Python ni conexión a internet. Los archivos se procesan dentro del navegador, aplica el `-wal` y calcula los SHA-256. Para revisar una carpeta de perfil completa, usa "Abrir carpeta de perfil…".
