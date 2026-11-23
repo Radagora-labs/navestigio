@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'none'; manifest-src 'self'; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WPTddQSYW0w/CJs1t6PZctTznCTEEjvyLizZZDprwyA=' 'sha256-17jxwbgJJP1/e/010fjd781VQlrH6D6ljhP7dazrgIA=' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'none'; manifest-src 'self'; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Navestigio</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2312324f%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%2227%22%20r%3D%2217%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%225%22/%3E%3Cline%20x1%3D%2240%22%20y1%3D%2240%22%20x2%3D%2253%22%20y2%3D%2253%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22round%22/%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2234%22%20r%3D%222.4%22%20fill%3D%22%234fd1a1%22/%3E%3Ccircle%20cx%3D%2221.5%22%20cy%3D%2230.5%22%20r%3D%222.8%22%20fill%3D%22%234fd1a1%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%2227.5%22%20r%3D%223.2%22%20fill%3D%22%234fd1a1%22/%3E%3Ccircle%20cx%3D%2233%22%20cy%3D%2222%22%20r%3D%223.7%22%20fill%3D%22%234fd1a1%22/%3E%3C/svg%3E">
 <style>/* Fuentes: Bricolage Grotesque e IBM Plex (SIL OFL 1.1), ver THIRD_PARTY_NOTICES.md */
@@ -351,7 +351,7 @@ img.thumb{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin
 <body>
 
 <header>
-  <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot d1" cx="14" cy="37" r="2.2"/><circle class="dot d2" cx="20.5" cy="32.5" r="2.7"/><circle class="dot d3" cx="27" cy="29" r="3.2"/><circle class="dot d4" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg><h1 class="wordmark"><b>Navestigio</b><small>Forense de navegadores · v3.5.0 · <a href="https://github.com/Radagora-labs/navestigio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title="© 2026 Radagora Labs. Todos los derechos reservados. Uso gratuito según la licencia de Navestigio, sin ninguna garantía. Prohibido modificar o redistribuir.">Licencia</a></small></h1></div>
+  <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot d1" cx="14" cy="37" r="2.2"/><circle class="dot d2" cx="20.5" cy="32.5" r="2.7"/><circle class="dot d3" cx="27" cy="29" r="3.2"/><circle class="dot d4" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg><h1 class="wordmark"><b>Navestigio</b><small>Forense de navegadores · v3.5.1 · <a href="https://github.com/Radagora-labs/navestigio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title="© 2026 Radagora Labs. Todos los derechos reservados. Uso gratuito según la licencia de Navestigio, sin ninguna garantía. Prohibido modificar o redistribuir.">Licencia</a></small></h1></div>
   <button class="primary" id="btnFiles" type="button">Abrir archivos…</button>
   <button id="btnFolder" type="button" title="Seleccione la carpeta del perfil (ej. …\User Data\Default)">Abrir carpeta de perfil…</button>
   <input id="files" type="file" multiple class="hide">
@@ -678,7 +678,7 @@ const MOZLZ4 = [0x6d, 0x6f, 0x7a, 0x4c, 0x7a, 0x34, 0x30, 0x00];
 const isMozLz4 = b => b.length >= 12 && MOZLZ4.every((x, i) => b[i] === x);
 function mozLz4(b) {
   const n = (b[8] | b[9] << 8 | b[10] << 16 | b[11] << 24) >>> 0;
-  if (n > 512 * 1024 * 1024) throw new Error("mozLz4 declara un tamaño descomprimido imposible");
+  const bad = mozLz4Problem(n, b.length); if (bad) throw new Error("Sesión de Firefox no abierta: " + bad);
   const out = new Uint8Array(n); let i = 12, o = 0;
   const len = () => { let v = 0, x; do { if (i >= b.length) throw new Error("bloque LZ4 truncado"); x = b[i++]; v += x; } while (x === 255); return v; };
   while (i < b.length) {
@@ -692,7 +692,8 @@ function mozLz4(b) {
     if (!off || off > o || o + ml > n) throw new Error("bloque LZ4 inválido (referencia)");
     for (let k = 0; k < ml; k++, o++) out[o] = out[o - off];
   }
-  return out.subarray(0, o);
+  if (o !== n) throw new Error(`bloque LZ4 incompleto: produjo ${o} bytes y el encabezado declara ${n} (archivo truncado o dañado)`);
+  return out;
 }
 /* Pestañas de la sesión de Firefox: una fila por entrada del historial de cada pestaña (atrás/adelante); «actual» marca la que se veía */
 function sessionRows(obj) {
@@ -893,6 +894,18 @@ onmessage = async e => {
 /* Código compartido entre la página y el Worker de SQLite: fechas, reglas de alerta y línea de tiempo.
    En la página se ejecuta como un <script> normal; en el Worker se antepone al código de sql.js. */
 let RULES = [], RULES_VER = 0;
+/* mozLz4 (sesiones de Firefox): límites contra archivos manipulados que declaran o producen tamaños enormes
+   (bombas de descompresión). La página los comprueba con los 12 bytes del encabezado antes de leer el archivo
+   y el Worker los repite antes de reservar memoria. Una sesión real ocupa pocas decenas de MB descomprimida. */
+const MOZLZ4_MAX_IN = 64 * 1024 * 1024, MOZLZ4_MAX_OUT = 128 * 1024 * 1024;
+function mozLz4Problem(declared, size) {
+  const mb = n => n < 1048576 ? n.toLocaleString("es") + " bytes" : (n / 1048576).toLocaleString("es", {maximumFractionDigits: 1}) + " MB";
+  if (size > MOZLZ4_MAX_IN) return `el archivo comprimido mide ${mb(size)}, más que el límite de ${mb(MOZLZ4_MAX_IN)}`;
+  if (declared > MOZLZ4_MAX_OUT) return `declara ${mb(declared)} descomprimidos, más que el límite de ${mb(MOZLZ4_MAX_OUT)}`;
+  // LZ4 produce como mucho unos 255 bytes por cada byte comprimido: más que eso no puede ser un archivo legítimo
+  if (declared > Math.max(0, size - 12) * 255 + 16) return `declara ${mb(declared)} descomprimidos, más de lo que caben en ${mb(size)} comprimidos (archivo manipulado o dañado)`;
+  return "";
+}
 const qi = n => '"' + String(n).replace(/"/g, '""') + '"';
 const RANGES = [["webkit",1.26e16,1.6e16,false],["unix_us",9.4e14,4.2e15,true],["unix_ms",9.4e11,4.2e12,true],["unix_s",9.4e8,4.2e9,true],["mac_s",1.0e8,9.4e8,true]];
 function toMs(v, kind) { // devuelve milisegundos Unix (Number) o null
@@ -1684,6 +1697,8 @@ $("summary").addEventListener("mouseleave", () => $("tip").classList.remove("on"
 const JSON_NAMES = new Set(["Bookmarks", "Preferences", "Secure Preferences", "Local State", "extensions.json"]);
 const LZ4_NAME = /\.(jsonlz4|baklz4)(-\d+)?$|^upgrade\.jsonlz4-/i;
 async function isMozLz4File(f) { if (f.size < 12) return false; return new TextDecoder("latin1").decode(await f.slice(0, 8).arrayBuffer()) === "mozLz40\u0000"; }
+// Comprueba el tamaño declarado antes de leer el archivo entero (ver mozLz4Problem en common.js)
+async function mozLz4Check(f) { if (!await isMozLz4File(f)) return ""; return mozLz4Problem(new DataView(await f.slice(8, 12).arrayBuffer()).getUint32(0, true), f.size); }
 /* Extensiones de Chromium: <perfil>/Extensions/<id>/<versión>/manifest.json. Se juntan por perfil en una sola evidencia;
    cada manifiesto conserva su propio SHA-256. Los nombres __MSG_x__ se resuelven con _locales/<idioma>/messages.json. */
 const EXT_RE = /^(.*?)(?:^|\/)Extensions\/([a-p]{32})\/([^/]+)\/manifest\.json$/;
@@ -1832,8 +1847,9 @@ async function openFilesInner(files) {
     } catch (e) { if (e.cancelled) return; toast(`${f.name}: ${e.message || e}`); }
   }
   for (const [path, f] of jsons) {
+    const bad = await mozLz4Check(f); if (bad) { toast(`${f.name}: sesión de Firefox no abierta: ${bad}.`); continue; }
     try { await busy(`Leyendo ${f.name}…`); const db = await loadJsonEvidence(f.name, path, new Uint8Array(await f.arrayBuffer()), async () => new Uint8Array(await f.arrayBuffer())); first = first || db; }
-    catch (e) { if (e.cancelled) return; toast(`${f.name}: no es un JSON válido (${e.message})`); }
+    catch (e) { if (e.cancelled) return; toast(/LZ4|Sesión de Firefox/.test(e.message) ? `${f.name}: ${e.message}` : `${f.name}: no es un JSON válido (${e.message})`); }
   }
   for (const [prefix, items] of exts) {
     try { await busy(`Leyendo ${nf(items.length)} manifiestos de extensiones…`); const db = await loadChromeExtensions(prefix, items, byName); first = first || db; }
@@ -2077,11 +2093,11 @@ async function fmtFor(db, sid, t, f, kind) {
 /* ---------------- Paquete de entrega verificable ----------------
    El ZIP lleva: CSV por tabla, la cadena de custodia en texto, manifest.json (cadena de custodia en formato de máquina) y
    SHA256SUMS.txt con el hash de cada archivo del paquete, verificable con «sha256sum -c SHA256SUMS.txt». */
-const BUILD_ID = "1b3c0c1752365fb3cda6583b9687ee3053d25ea3ecfb8973d34ccfc1f132e47d";
+const BUILD_ID = "268f327a1b09934d525eac13ca4533a41145e3dd32d62b4335c299cf950abdbd";
 async function exportZip() {
   const db = cur(); if (!db) return;
   const t = tz(), entries = [], dbs = db.virtual ? realDbs() : [db], files = [];
-  const lines = [`Navestigio v3.5.0 · forense de navegadores · compilación ${BUILD_ID.slice(0, 16)}`, `Generado: ${nowLocal()} (${tzLabel(t)})`, `Evidencia: ${db.path}${db.sample ? " (DATOS DE EJEMPLO)" : ""}`,
+  const lines = [`Navestigio v3.5.1 · forense de navegadores · compilación ${BUILD_ID.slice(0, 16)}`, `Generado: ${nowLocal()} (${tzLabel(t)})`, `Evidencia: ${db.path}${db.sample ? " (DATOS DE EJEMPLO)" : ""}`,
     "Hashes de la evidencia original (SHA-256 · MD5):", ...dbs.flatMap(d => d.hashes.map(([k, v, m]) => `  ${k}  ${v}  ${m || ""}`))];
   for (const d of dbs) if (d.walInfo) lines.push(`WAL aplicado (${d.label}): ${d.walInfo.commits} transacciones, ${d.walInfo.frames} frames, ${d.walInfo.pages} páginas${d.walInfo.note ? " · " + d.walInfo.note : ""}`);
   const ir = dbs.flatMap(integrityRows).sort((a, b) => ({Alta: 0, Media: 1}[a[4]] ?? 2) - ({Alta: 0, Media: 1}[b[4]] ?? 2)), sc = scopeInfo();
@@ -2110,7 +2126,7 @@ async function exportZip() {
   const sums = []; for (const [n, d] of entries) { const b = bytesOf(d); sums.push({archivo: n, bytes: b.length, sha256: await sha256(b)}); }
   const manifest = {
     formato: "navestigio-manifest/1",
-    herramienta: {nombre: "Navestigio", version: "3.5.0", compilacion: BUILD_ID, sqlite: sqliteVer, navegador: navigator.userAgent},
+    herramienta: {nombre: "Navestigio", version: "3.5.1", compilacion: BUILD_ID, sqlite: sqliteVer, navegador: navigator.userAgent},
     generado: {utc: new Date().toISOString(), local: nowLocal(), zona_horaria: tzLabel(t), regla_zona: typeof t === "string" ? "zona IANA, con horario de verano" : "desfase fijo, sin horario de verano"},
     exportacion: {vista: db.virtual ? "Análisis del caso" : db.label, filtros: "ninguno: el ZIP exporta las tablas completas"},
     evidencias: dbs.map(d => ({nombre: d.label, ruta: d.path, bytes: d.size, datos_de_ejemplo: !!d.sample, tipo: d.json ? "JSON" : "SQLite",

@@ -3,6 +3,18 @@
 /* Código compartido entre la página y el Worker de SQLite: fechas, reglas de alerta y línea de tiempo.
    En la página se ejecuta como un <script> normal; en el Worker se antepone al código de sql.js. */
 let RULES = [], RULES_VER = 0;
+/* mozLz4 (sesiones de Firefox): límites contra archivos manipulados que declaran o producen tamaños enormes
+   (bombas de descompresión). La página los comprueba con los 12 bytes del encabezado antes de leer el archivo
+   y el Worker los repite antes de reservar memoria. Una sesión real ocupa pocas decenas de MB descomprimida. */
+const MOZLZ4_MAX_IN = 64 * 1024 * 1024, MOZLZ4_MAX_OUT = 128 * 1024 * 1024;
+function mozLz4Problem(declared, size) {
+  const mb = n => n < 1048576 ? n.toLocaleString("es") + " bytes" : (n / 1048576).toLocaleString("es", {maximumFractionDigits: 1}) + " MB";
+  if (size > MOZLZ4_MAX_IN) return `el archivo comprimido mide ${mb(size)}, más que el límite de ${mb(MOZLZ4_MAX_IN)}`;
+  if (declared > MOZLZ4_MAX_OUT) return `declara ${mb(declared)} descomprimidos, más que el límite de ${mb(MOZLZ4_MAX_OUT)}`;
+  // LZ4 produce como mucho unos 255 bytes por cada byte comprimido: más que eso no puede ser un archivo legítimo
+  if (declared > Math.max(0, size - 12) * 255 + 16) return `declara ${mb(declared)} descomprimidos, más de lo que caben en ${mb(size)} comprimidos (archivo manipulado o dañado)`;
+  return "";
+}
 const qi = n => '"' + String(n).replace(/"/g, '""') + '"';
 const RANGES = [["webkit",1.26e16,1.6e16,false],["unix_us",9.4e14,4.2e15,true],["unix_ms",9.4e11,4.2e12,true],["unix_s",9.4e8,4.2e9,true],["mac_s",1.0e8,9.4e8,true]];
 function toMs(v, kind) { // devuelve milisegundos Unix (Number) o null
