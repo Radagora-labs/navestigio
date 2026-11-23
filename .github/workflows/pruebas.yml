@@ -2,6 +2,7 @@ name: Pruebas
 
 on:
   push:
+    branches: [main]   # las demás ramas se prueban en su PR, así no corre dos veces
   pull_request:
 
 permissions:

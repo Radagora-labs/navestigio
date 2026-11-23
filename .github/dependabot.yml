@@ -1,11 +1,19 @@
 # Avisa con un PR cuando hay versiones nuevas de las acciones del flujo de pruebas o de Playwright (solo pruebas).
+# Una vez al mes y agrupado: un solo PR para las acciones y otro para npm. Las actualizaciones de seguridad
+# llegan aparte y en cuanto se publican (Dependabot security updates en la configuración del repositorio).
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    groups:
+      acciones:
+        patterns: ["*"]
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    groups:
+      npm:
+        patterns: ["*"]
