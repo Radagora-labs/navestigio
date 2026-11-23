@@ -1,0 +1,22 @@
+# Dependency Review: en cada PR revisa las dependencias que se agregan o cambian y lo bloquea si alguna tiene
+# una vulnerabilidad conocida de severidad moderada o mayor.
+name: Revisión de dependencias
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write   # deja el resumen como comentario en el PR cuando encuentra algo
+
+jobs:
+  revision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec  # v5.0.1
+        with:
+          fail-on-severity: moderate
+          comment-summary-in-pr: on-failure
