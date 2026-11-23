@@ -87,8 +87,6 @@ section[id]{scroll-margin-top:60px}
 .apoyo .sub{margin:0}
 .apoyo .cta{flex-direction:column;align-items:stretch;min-width:240px}
 .btn.don{justify-content:center;padding:14px 22px;font-size:16px;position:relative;overflow:hidden}
-.btn.sponsors{background:var(--time);color:#0b1f17;border-color:transparent}
-.btn.sponsors:hover{box-shadow:0 10px 30px -8px rgba(115,214,174,.75)}
 .btn.kofi{border-color:color-mix(in srgb,var(--time) 55%,var(--line));color:var(--fg)}
 .btn.kofi svg{color:var(--time)}
 .btn.kofi:hover{background:var(--time-soft);box-shadow:0 10px 30px -10px rgba(115,214,174,.6)}
