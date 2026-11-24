@@ -31,6 +31,7 @@ const sha256 = b => crypto.createHash("sha256").update(b).digest("hex"), md5 = b
   const browser = await chromium.launch();
   try {
     for (let i = 0; i < 50; i++) { try { if ((await fetch(BASE)).ok) break; } catch (e) {} await sleep(200); }
+    await require("./custodia.cjs")(browser);
     console.log("Recorrido guiado");
     const ctxT = await browser.newContext({viewport: {width: 1400, height: 1000}}), pt = await ctxT.newPage(), eT = [];
     pt.on("pageerror", e => eT.push(String(e)));

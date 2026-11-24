@@ -34,7 +34,7 @@
   "applicationCategory": "SecurityApplication",
   "applicationSubCategory": "Digital forensics",
   "operatingSystem": "Windows, macOS, Linux",
-  "softwareVersion": "3.5.1",
+
   "inLanguage": "es",
   "isAccessibleForFree": true,
   "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
@@ -60,7 +60,7 @@
 <main>
 <div class="wrap hero">
   <div>
-    <span class="eyebrow">v3.5.1 · free · Spanish interface</span>
+    <span class="eyebrow">v3.5.1 · source on main · free · Spanish interface</span>
     <h1>Follow the traces left by <em>whoever browsed</em>.</h1>
     <p class="lead">Navestigio is a free browser forensics tool. It analyzes history, downloads, cookies and saved credentials from Chrome, Edge, Firefox and Safari in a single page that works offline. The evidence never leaves the computer and is never modified.</p>
     <div class="cta">
@@ -138,12 +138,12 @@
   <h2>Get started in three steps</h2>
   <p class="sub">Nothing to install. Python is optional: it only serves the app on 127.0.0.1 so it can be installed as an app.</p>
   <ol class="steps">
-    <li><b>Download and verify</b>Get the zip of the latest version and compare its SHA-256 with the one published in the release. With <a href="https://github.com/jedisct1/minisign/releases">minisign</a>, also check the <code>.minisig</code> signature: it proves the zip was published by Radagora Labs.</li>
+    <li><b>Download and verify</b>Get the zip of the latest version and compare its SHA-256 with the one published in the release. Use the exact asset name from that release in the commands below. For signed releases, download the matching <code>.minisig</code> and verify it with <a href="https://github.com/jedisct1/minisign/releases">minisign</a>.</li>
     <li><b>Open Navestigio</b>Double-click <code>iniciar_navestigio.bat</code>, or open <code>navestigio.html</code> in Chrome, Edge or Firefox. The first time, a guided tour shows you the essentials with sample data.</li>
     <li><b>Load the evidence</b>Drag the files in or open the profile folder. Navestigio recognizes each artifact.</li>
   </ol>
   <pre><code>certutil -hashfile navestigio-3.5.1.zip SHA256      # Windows
-sha256sum -c navestigio-3.5.1.zip.sha256           # Linux or macOS
+sha256sum navestigio-3.5.1.zip           # Linux or macOS
 minisign -Vm navestigio-3.5.1.zip -P RWQ5FXNRNFAh3TWq8+wB/veBbwDpopCZ6pHOmGNZQG0fKIgME7t5q4OZ</code></pre>
 </div></section>
 

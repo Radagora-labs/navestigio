@@ -10,13 +10,13 @@ Todo ocurre dentro del navegador: la evidencia no se sube a ningún servidor, no
 
 ## Descarga
 
-Descarga `navestigio-<versión>.zip` desde la sección **Releases** del repositorio y descomprímelo en una carpeta propia (no directamente en Descargas). Cada release publica también el SHA-256 del zip; en Windows puedes comprobarlo con:
+Descarga `navestigio-<versión>.zip` desde la sección **Releases** del repositorio y descomprímelo en una carpeta propia (no directamente en Descargas). Compara el SHA-256 con el publicado en esa release. En los comandos siguientes sustituye el nombre del ZIP de ejemplo por el que acabas de descargar:
 
 ```
 certutil -hashfile navestigio-3.5.1.zip SHA256
 ```
 
-Desde la 3.5.1 cada release trae también la firma `navestigio-3.5.1.zip.minisig`, que prueba que el zip lo publicó Radagora Labs y no fue cambiado (el SHA-256 solo prueba que no se dañó). Para comprobarla, descarga [minisign](https://github.com/jedisct1/minisign/releases) y ejecuta en la carpeta del zip:
+Para verificar la autoría de una publicación firmada, descarga el archivo `.minisig` correspondiente al ZIP de esa misma release. Para comprobarla, descarga [minisign](https://github.com/jedisct1/minisign/releases) y ejecuta en la carpeta del zip:
 
 ```
 minisign -Vm navestigio-3.5.1.zip -P RWQ5FXNRNFAh3TWq8+wB/veBbwDpopCZ6pHOmGNZQG0fKIgME7t5q4OZ

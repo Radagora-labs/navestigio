@@ -174,16 +174,22 @@ const OPS = {
   },
   timeline({items}) { // items: [{id, tset, art, recovered, extra}] -> llena eventos del caso y devuelve conteo y alertas
     const c = db("caso");
-    c.run("DROP INDEX IF EXISTS ev_momento; DROP INDEX IF EXISTS ev_tipo; DELETE FROM eventos");
-    const st = c.prepare("INSERT INTO eventos VALUES(CAST(? AS INTEGER),?,?,?,?,?,?,?,?,?,?)"); c.run("BEGIN");
+    const st = c.prepare("INSERT INTO eventos VALUES(CAST(? AS INTEGER),?,?,?,?,?,?,?,?,?,?,?)");
+    c.run("BEGIN");
     // Las alertas solo miran las 7 columnas de contenido, no las de procedencia
-    const stats = newAlertStats(), ins = v => { st.run(v); addAlertStats(stats, v.slice(0, EV_COLS.length)); };
+    const stats = newAlertStats(), omisiones = {};
     try {
+      c.run("DROP INDEX IF EXISTS ev_momento; DROP INDEX IF EXISTS ev_tipo; DELETE FROM eventos");
       for (const it of items) {
-        const d = DBS.get(it.id); if (!d) continue; const tset = new Set(it.tset);
+        const d = db(it.id), tset = new Set(it.tset);
+        const ins = values => { st.run([...values, it.origen]); addAlertStats(stats, values.slice(0, EV_COLS.length)); };
         for (const [req, sqlT] of EXTRACT) {
           if (!req.every(t => tset.has(t))) continue;
-          let rows; try { rows = all(d, sqlT); } catch (e) { continue; }
+          let rows;
+          try { rows = all(d, sqlT); } catch (e) {
+            (omisiones[it.id] ||= []).push(`Extracción de línea de tiempo omitida (${req.join(", ")}): ${e.message}`);
+            continue;
+          }
           const auto = String(sqlT).includes("'auto'");
           for (const r of rows) { const wk = toWebkit(r[0], String(r[1])); if (wk === null) continue;
             ins([wk.toString(), bindVal(r[2]), it.art, bindVal(r[3]), bindVal(r[4]), bindVal(r[5]), bindVal(r[6]),
@@ -193,9 +199,10 @@ const OPS = {
           "recuperado de espacio libre o -wal", "media", "last_visit_time del registro borrado", interpretUrl(r.url)]);
         for (const v of it.extra || []) ins(v);
       }
-    } finally { st.free(); c.run("COMMIT"); }
-    c.run("CREATE INDEX IF NOT EXISTS ev_momento ON eventos(momento); CREATE INDEX IF NOT EXISTS ev_tipo ON eventos(tipo, momento)");
-    return {n: Number(all(c, "SELECT COUNT(*) FROM eventos")[0][0]), stats};
+      c.run("CREATE INDEX IF NOT EXISTS ev_momento ON eventos(momento); CREATE INDEX IF NOT EXISTS ev_tipo ON eventos(tipo, momento)");
+      c.run("COMMIT");
+    } catch (e) { c.run("ROLLBACK"); throw e; } finally { st.free(); }
+    return {n: Number(all(c, "SELECT COUNT(*) FROM eventos")[0][0]), stats, omisiones};
   },
   alertStats() { const stats = newAlertStats(), [ac, ap] = alertCond(EV_COLS);
     for (const r of all(db("caso"), `SELECT ${EV_COLS.map(qi).join(", ")} FROM eventos WHERE ${ac}`, ap)) addAlertStats(stats, r); return stats; },
