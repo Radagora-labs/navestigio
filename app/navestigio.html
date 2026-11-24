@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WPTddQSYW0w/CJs1t6PZctTznCTEEjvyLizZZDprwyA=' 'sha256-17jxwbgJJP1/e/010fjd781VQlrH6D6ljhP7dazrgIA=' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'none'; manifest-src 'self'; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WPTddQSYW0w/CJs1t6PZctTznCTEEjvyLizZZDprwyA=' 'sha256-TFgU+y8FIx548BqvcbPCVrLVy0aqravHr5r22BCE6p4=' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'none'; manifest-src 'self'; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Navestigio</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2312324f%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%2227%22%20r%3D%2217%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%225%22/%3E%3Cline%20x1%3D%2240%22%20y1%3D%2240%22%20x2%3D%2253%22%20y2%3D%2253%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22round%22/%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2234%22%20r%3D%222.4%22%20fill%3D%22%234fd1a1%22/%3E%3Ccircle%20cx%3D%2221.5%22%20cy%3D%2230.5%22%20r%3D%222.8%22%20fill%3D%22%234fd1a1%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%2227.5%22%20r%3D%223.2%22%20fill%3D%22%234fd1a1%22/%3E%3Ccircle%20cx%3D%2233%22%20cy%3D%2222%22%20r%3D%223.7%22%20fill%3D%22%234fd1a1%22/%3E%3C/svg%3E">
 <style>/* Fuentes: Bricolage Grotesque e IBM Plex (SIL OFL 1.1), ver THIRD_PARTY_NOTICES.md */
@@ -811,16 +811,22 @@ const OPS = {
   },
   timeline({items}) { // items: [{id, tset, art, recovered, extra}] -> llena eventos del caso y devuelve conteo y alertas
     const c = db("caso");
-    c.run("DROP INDEX IF EXISTS ev_momento; DROP INDEX IF EXISTS ev_tipo; DELETE FROM eventos");
-    const st = c.prepare("INSERT INTO eventos VALUES(CAST(? AS INTEGER),?,?,?,?,?,?,?,?,?,?)"); c.run("BEGIN");
+    const st = c.prepare("INSERT INTO eventos VALUES(CAST(? AS INTEGER),?,?,?,?,?,?,?,?,?,?,?)");
+    c.run("BEGIN");
     // Las alertas solo miran las 7 columnas de contenido, no las de procedencia
-    const stats = newAlertStats(), ins = v => { st.run(v); addAlertStats(stats, v.slice(0, EV_COLS.length)); };
+    const stats = newAlertStats(), omisiones = {};
     try {
+      c.run("DROP INDEX IF EXISTS ev_momento; DROP INDEX IF EXISTS ev_tipo; DELETE FROM eventos");
       for (const it of items) {
-        const d = DBS.get(it.id); if (!d) continue; const tset = new Set(it.tset);
+        const d = db(it.id), tset = new Set(it.tset);
+        const ins = values => { st.run([...values, it.origen]); addAlertStats(stats, values.slice(0, EV_COLS.length)); };
         for (const [req, sqlT] of EXTRACT) {
           if (!req.every(t => tset.has(t))) continue;
-          let rows; try { rows = all(d, sqlT); } catch (e) { continue; }
+          let rows;
+          try { rows = all(d, sqlT); } catch (e) {
+            (omisiones[it.id] ||= []).push(`Extracción de línea de tiempo omitida (${req.join(", ")}): ${e.message}`);
+            continue;
+          }
           const auto = String(sqlT).includes("'auto'");
           for (const r of rows) { const wk = toWebkit(r[0], String(r[1])); if (wk === null) continue;
             ins([wk.toString(), bindVal(r[2]), it.art, bindVal(r[3]), bindVal(r[4]), bindVal(r[5]), bindVal(r[6]),
@@ -830,9 +836,10 @@ const OPS = {
           "recuperado de espacio libre o -wal", "media", "last_visit_time del registro borrado", interpretUrl(r.url)]);
         for (const v of it.extra || []) ins(v);
       }
-    } finally { st.free(); c.run("COMMIT"); }
-    c.run("CREATE INDEX IF NOT EXISTS ev_momento ON eventos(momento); CREATE INDEX IF NOT EXISTS ev_tipo ON eventos(tipo, momento)");
-    return {n: Number(all(c, "SELECT COUNT(*) FROM eventos")[0][0]), stats};
+      c.run("CREATE INDEX IF NOT EXISTS ev_momento ON eventos(momento); CREATE INDEX IF NOT EXISTS ev_tipo ON eventos(tipo, momento)");
+      c.run("COMMIT");
+    } catch (e) { c.run("ROLLBACK"); throw e; } finally { st.free(); }
+    return {n: Number(all(c, "SELECT COUNT(*) FROM eventos")[0][0]), stats, omisiones};
   },
   alertStats() { const stats = newAlertStats(), [ac, ap] = alertCond(EV_COLS);
     for (const r of all(db("caso"), `SELECT ${EV_COLS.map(qi).join(", ")} FROM eventos WHERE ${ac}`, ap)) addAlertStats(stats, r); return stats; },
@@ -1308,25 +1315,45 @@ const MK_STORE = (() => { try { return MK_FILE ? sessionStorage : localStorage; 
 let ALLM = (() => { let o = {};
   try { o = JSON.parse((MK_STORE && MK_STORE.getItem(MK_KEY)) || "{}") || {}; } catch (e) {}
   try { const old = localStorage.getItem("visor_marks"); // migración desde v2.9 (una sola lista para todos los casos)
-    if (old !== null) { for (const m of JSON.parse(old) || []) (o[m.sha || ""] = o[m.sha || ""] || []).push(m);
-      localStorage.removeItem("visor_marks"); if (MK_STORE) MK_STORE.setItem(MK_KEY, JSON.stringify(o)); } } catch (e) {}
+    if (old !== null) { for (const m of JSON.parse(old) || []) {
+        const group = o[m.sha || ""] ||= [];
+        if (!group.some(x => x.id === m.id)) group.push(m);
+      }
+      if (MK_STORE) { MK_STORE.setItem(MK_KEY, JSON.stringify(o)); localStorage.removeItem("visor_marks"); } } } catch (e) {}
   return o; })();
-function activeShas() { return new Set(realDbs().map(d => d.hashes[0] && d.hashes[0][1]).filter(Boolean)); }
+// Una adquisición incluye los auxiliares que pudieron cambiar las filas de la copia de trabajo.
+async function acquisitionId(hashes) {
+  if (hashes.length === 1) return hashes[0][1];
+  const parts = hashes.map(([name, sha]) => JSON.stringify([name, sha])).sort();
+  return sha256(new TextEncoder().encode(JSON.stringify(parts)));
+}
+function markBelongs(m, dbs) {
+  return dbs.some(d => m.origen ? m.origen === d.origen : m.sha === d.hashes[0][1]);
+}
 let MARKS = [];
-function refreshMarks() { const s = activeShas(); MARKS = Object.entries(ALLM).filter(([k]) => s.has(k)).flatMap(([, v]) => v); }
+function refreshMarks() { const dbs = realDbs(); MARKS = Object.values(ALLM).flat().filter(m => markBelongs(m, dbs)); }
 const saveMarks = () => {
-  for (const k of activeShas()) delete ALLM[k];
+  const dbs = realDbs();
+  for (const d of dbs) {
+    const k = d.hashes[0][1];
+    if (ALLM[k]) ALLM[k] = ALLM[k].filter(m => !markBelongs(m, dbs));
+  }
   for (const m of MARKS) { const b = ALLM[m.sha] = ALLM[m.sha] || []; if (!b.includes(m)) b.push(m); }
-  try { if (MK_STORE) MK_STORE.setItem(MK_KEY, JSON.stringify(ALLM)); } catch (e) {} };
+  try {
+    if (MK_STORE) { MK_STORE.setItem(MK_KEY, JSON.stringify(ALLM)); return true; }
+  } catch (e) { /* La copia en memoria sigue disponible para exportar. */ }
+  toast("El navegador no pudo guardar los cambios. Exporte el ZIP del caso antes de cerrar.");
+  return false;
+};
 const markKeys = () => new Set(MARKS.map(m => m.key));
 
 /* ---------------- Análisis del caso (línea de tiempo + hallazgos) ---------------- */
 let CASE = null;
 const PRI_ORDER = "CASE prioridad WHEN 'Alta' THEN 0 WHEN 'Media' THEN 1 ELSE 2 END";
-const CASE_SCHEMA = `CREATE TABLE eventos(momento INTEGER, tipo TEXT, artefacto TEXT, url TEXT, titulo TEXT, detalle TEXT, tabla_origen TEXT, fuente TEXT, confianza TEXT, base_tiempo TEXT, interpretacion TEXT);
+const CASE_SCHEMA = `CREATE TABLE eventos(momento INTEGER, tipo TEXT, artefacto TEXT, url TEXT, titulo TEXT, detalle TEXT, tabla_origen TEXT, fuente TEXT, confianza TEXT, base_tiempo TEXT, interpretacion TEXT, id_evidencia TEXT);
     CREATE INDEX ev_momento ON eventos(momento); CREATE INDEX ev_tipo ON eventos(tipo, momento);
-    CREATE TABLE recuperados(artefacto TEXT, url TEXT, titulo TEXT, last_visit_time INTEGER, visitas INTEGER, tecleadas INTEGER, estructura TEXT, confianza TEXT, origen TEXT, pagina INTEGER, desplazamiento INTEGER);
-    CREATE TABLE integridad(momento INTEGER, momento_fin INTEGER, artefacto TEXT, indicador TEXT, prioridad TEXT, confianza TEXT, detalle TEXT, interpretacion TEXT, tabla TEXT);
+    CREATE TABLE recuperados(artefacto TEXT, url TEXT, titulo TEXT, last_visit_time INTEGER, visitas INTEGER, tecleadas INTEGER, estructura TEXT, confianza TEXT, origen TEXT, pagina INTEGER, desplazamiento INTEGER, id_evidencia TEXT);
+    CREATE TABLE integridad(momento INTEGER, momento_fin INTEGER, artefacto TEXT, indicador TEXT, prioridad TEXT, confianza TEXT, detalle TEXT, interpretacion TEXT, tabla TEXT, id_evidencia TEXT);
     CREATE TABLE hallazgos(id TEXT, momento INTEGER, artefacto TEXT, fuente TEXT, resumen TEXT, nota TEXT, marcado_el INTEGER, sha256 TEXT, detalle TEXT);
     CREATE TABLE perfiles_detectados(navegador TEXT, usuario TEXT, perfil TEXT, carpeta TEXT, evidencias INTEGER, artefactos TEXT);`;
 async function makeCase() {
@@ -1348,11 +1375,12 @@ async function makeCase() {
 const artOf = d => d.sample ? d.label + " (ejemplo)" : d.path;
 function realDbs() { return S.dbs.filter(d => !d.virtual); }
 async function rebuildTimeline() {
-  const items = realDbs().map(d => ({id: d.id, art: artOf(d), tset: d.sources.filter(s => s.id.startsWith("t:") && !s.view).map(s => s.id.slice(2)),
+  const items = realDbs().map(d => ({id: d.id, origen: d.origen, art: artOf(d), tset: d.sources.filter(s => s.id.startsWith("t:") && !s.view).map(s => s.id.slice(2)),
     recovered: (d.recovered || []).filter(r => r.lvt).map(r => ({lvt: r.lvt, url: r.url, title: r.title, origen: r.origen})),
     // los indicadores con fecha también van a la línea de tiempo, marcados como tales
     extra: integrityRows(d).filter(r => r[0] != null).map(r => [r[0], "Indicador de integridad", r[2], "", r[3], r[6], r[8] || "", "indicador de integridad (estructura de la base)", r[5], "fecha del registro conservado más cercano", ""])}));
   const r = await DB.call("timeline", {items});
+  for (const d of realDbs()) d.omisiones = r.omisiones[d.id] || [];
   CASE.src("s:timeline").rows = r.n;
   CASE.hashes = realDbs().map(d => [artOf(d), d.hashes[0][1]]);
   CASE.kindCache.delete("s:timeline"); CASE.alertStats = r.stats; caseChanged();
@@ -1364,21 +1392,21 @@ async function caseAlertStats() { // recalcula solo si cambiaron las reglas
 }
 async function rebuildFindings() {
   await DB.call("insertMany", {id: "caso", pre: "DELETE FROM hallazgos", sql: "INSERT INTO hallazgos VALUES(?,CAST(? AS INTEGER),?,?,?,?,CAST(? AS INTEGER),?,?)",
-    rows: MARKS.map(m => [m.id, m.momento || null, m.artefacto, m.fuente, m.resumen, m.nota || "", (BigInt(m.marcado) * 1000n + 11644473600000000n).toString(), m.sha, m.detalle])});
+    rows: MARKS.map(m => [m.id, m.momento || null, m.artefacto, !m.origen && m.key?.startsWith("caso|") ? m.fuente + " (procedencia por verificar)" : m.fuente, m.resumen, m.nota || "", (BigInt(m.marcado) * 1000n + 11644473600000000n).toString(), m.sha, !m.origen && m.key?.startsWith("caso|") ? "Procedencia histórica pendiente de contraste con la evidencia original.\n" + m.detalle : m.detalle])});
   CASE.src("s:hallazgos").rows = MARKS.length;
   CASE.kindCache.delete("s:hallazgos"); caseChanged();
 }
 async function rebuildRecovered() {
   const rows = [];
-  for (const d of realDbs()) { const art = artOf(d); for (const r of d.recovered || []) rows.push([art, r.url, r.title, r.lvt, r.vc, r.tc, r.estructura, r.estructura === "fragmento" ? "baja" : "media", r.origen, r.page, r.off]); }
-  await DB.call("insertMany", {id: "caso", pre: "DELETE FROM recuperados", sql: "INSERT INTO recuperados VALUES(?,?,?,CAST(? AS INTEGER),?,?,?,?,?,?,?)", rows});
+  for (const d of realDbs()) { const art = artOf(d); for (const r of d.recovered || []) rows.push([art, r.url, r.title, r.lvt, r.vc, r.tc, r.estructura, r.estructura === "fragmento" ? "baja" : "media", r.origen, r.page, r.off, d.origen]); }
+  await DB.call("insertMany", {id: "caso", pre: "DELETE FROM recuperados", sql: "INSERT INTO recuperados VALUES(?,?,?,CAST(? AS INTEGER),?,?,?,?,?,?,?,?)", rows});
   CASE.src("s:recuperados").rows = rows.length; CASE.kindCache.delete("s:recuperados"); caseChanged();
 }
 let CASE_VER = 0;
 function caseChanged() { CASE_VER++; if (CASE && CASE.countCache) CASE.countCache.clear(); }
 async function rebuildIntegrity() {
-  const rows = realDbs().flatMap(integrityRows);
-  await DB.call("insertMany", {id: "caso", pre: "DELETE FROM integridad", sql: "INSERT INTO integridad VALUES(CAST(? AS INTEGER),CAST(? AS INTEGER),?,?,?,?,?,?,?)", rows});
+  const rows = realDbs().flatMap(d => integrityRows(d).map(row => [...row, d.origen]));
+  await DB.call("insertMany", {id: "caso", pre: "DELETE FROM integridad", sql: "INSERT INTO integridad VALUES(CAST(? AS INTEGER),CAST(? AS INTEGER),?,?,?,?,?,?,?,?)", rows});
   CASE.src("s:integridad").rows = rows.length; CASE.kindCache.delete("s:integridad"); caseChanged();
 }
 /* ---------------- Perfiles detectados ----------------
@@ -1463,14 +1491,15 @@ function integrityRows(d) {
   return rows;
 }
 /* Alcance: lo que se analizó y, sobre todo, lo que no, para que un resultado limpio no pase por completo */
-function scopeInfo() {
-  const dbs = realDbs(), enc = new Map();
+function scopeInfo(dbs = realDbs()) {
+  const enc = new Map();
   for (const d of dbs) for (const [k, n] of Object.entries((d.integ && d.integ.enc) || {})) if (n) enc.set(k, (enc.get(k) || 0) + n);
   const frag = dbs.reduce((a, d) => a + (d.recovered || []).filter(r => !r.lvt).length, 0), jr = dbs.filter(d => d.journal);
   const done = [`${nf(dbs.length)} ${dbs.length === 1 ? "evidencia abierta" : "evidencias abiertas"}, cada una con su SHA-256`,
     "Tablas reconocidas de Chrome, Edge, Firefox y Safari, unidas en la línea de tiempo",
     "Registros borrados en páginas libres, freeblocks y -wal", "Indicadores de integridad de cada base SQLite"];
   const not = [...[...enc].map(([k, n]) => `${nf(n)} ${k} cifrados: se cuentan, no se descifran`),
+    ...dbs.flatMap(d => (d.omisiones || []).map(reason => `${d.path}: ${reason}`)),
     ...jr.map(d => `-journal de ${d.label}: no se aplicó`),
     ...(frag ? [`${nf(frag)} ${frag === 1 ? "fragmento" : "fragmentos"} de URL sin fecha: ${frag === 1 ? "está" : "están"} en «Registros recuperados», no en la línea de tiempo`] : []),
     "Caché del navegador y reconstrucción de páginas", "Local Storage, Session Storage e IndexedDB",
@@ -1719,8 +1748,9 @@ async function loadChromeExtensions(prefix, items, byName) {
   }
   const id = newId(), label = "Extensions", path = (prefix ? prefix + "/" : "") + "Extensions";
   const make = () => new TextEncoder().encode(JSON.stringify({__navestigio: "extensiones_chromium", extensiones: exts}));
+  const origen = await acquisitionId(hashes);
   const work = make(); await DB.call("json", {id, name: label, bytes: work}, [work.buffer]);
-  const db = {id, label, path, hashes, walInfo: null, notes: [`${nf(exts.length)} manifiestos de extensiones leídos (SHA-256 de cada uno en la cadena de custodia)`], sample: false, json: true,
+  const db = {id, label, path, hashes, origen, walInfo: null, notes: [`${nf(exts.length)} manifiestos de extensiones leídos (SHA-256 de cada uno en la cadena de custodia)`], sample: false, json: true,
     size: items.reduce((a, it) => a + it[1].size, 0), sources: [], kindCache: new Map(), overrides: new Map(), queries: new Map(), recovered: [], reopen: async () => make()};
   await buildSources(db); S.dbs.push(db); return db;
 }
@@ -1729,7 +1759,7 @@ async function loadJsonEvidence(label, path, bytes, reopen) {
   const id = newId(), hashes = [await hashPair(label, bytes)], size = bytes.length;
   if (!reopen) { const keep = bytes.slice(0); reopen = async () => keep.slice(0); }
   const work = bytes.slice(0); await DB.call("json", {id, name: label, bytes: work}, [work.buffer]);
-  const db = {id, label, path, hashes, walInfo: null, notes: ["Artefacto JSON convertido a tablas"], sample: false, json: true,
+  const db = {id, label, path, hashes, origen: hashes[0][1], walInfo: null, notes: ["Artefacto JSON convertido a tablas"], sample: false, json: true,
     size, sources: [], kindCache: new Map(), overrides: new Map(), queries: new Map(), recovered: [], reopen};
   await buildSources(db); S.dbs.push(db); return db;
 }
@@ -1783,7 +1813,7 @@ function applyWal(db, wal) {
 /* ---------------- Apertura de evidencia ---------------- */
 async function sha256(bytes) {
   try { const h = await crypto.subtle.digest("SHA-256", bytes); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join(""); }
-  catch (e) { return "(SHA-256 no disponible en este navegador)"; }
+  catch (e) { throw new Error("No se pudo calcular el SHA-256. Compruebe que el navegador permite WebCrypto."); }
 }
 /* MD5 propio (WebCrypto no lo trae): solo para el manifiesto, junto al SHA-256 que es el hash de referencia */
 const MD5_K = Uint32Array.from({length: 64}, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296));
@@ -1825,7 +1855,15 @@ async function openFiles(fileList) {
 }
 async function openFilesInner(files) {
   await busy("Buscando bases SQLite…");
-  const byName = new Map(files.map(f => [f.webkitRelativePath || f.name, f]));
+  const byName = new Map();
+  for (const f of files) {
+    const path = f.webkitRelativePath || f.name;
+    if (byName.has(path)) {
+      toast(`Selección ambigua: ${path} aparece más de una vez. Abra cada carpeta de perfil por separado con sus archivos auxiliares.`);
+      return;
+    }
+    byName.set(path, f);
+  }
   const mains = [], jsons = [], exts = new Map(), fromFolder = files.some(f => f.webkitRelativePath);
   for (const [path, f] of byName) {
     if (/-(wal|journal|shm)$/i.test(path)) continue;
@@ -1874,11 +1912,12 @@ async function loadEvidence(label, path, bytes, walFile, journalFile, sample, re
     hashes.push(await hashPair(label + "-journal", new Uint8Array(await journalFile.arrayBuffer())));
     notes.push("Hay un -journal: no se aplica (puede contener páginas anteriores a la última transacción).");
   }
+  const origen = await acquisitionId(hashes);
   const {work, walInfo} = prepWork(bytes, walBytes);
   if (!reopen) { const keep = bytes.slice(0), keepWal = walBytes && walBytes.slice(0); reopen = async () => prepWork(keep, keepWal).work; }
   const id = newId();
   await DB.call("open", {id, bytes: work}, [work.buffer]);
-  const db = {id, label, path, hashes, walInfo, notes, sample: !!sample,
+  const db = {id, label, path, hashes, origen, walInfo, notes, sample: !!sample,
     size: bytes.length, sources: [], kindCache: new Map(), overrides: new Map(), queries: new Map(),
     rawBytes: bytes, walBytes, walReplaced: walInfo && walInfo.replaced || [], recovered: [], journal: !!journalFile, reopen};
   try {
@@ -1950,7 +1989,7 @@ function localToUtcMs(v, end) {
   if (!v) return null; const hasSec = v.length > 16;
   const wall = Date.parse(v + "Z"); if (isNaN(wall)) return null;
   const z = tz(); let u = wall - tzOffMin(z, wall) * 60000; u = wall - tzOffMin(z, u) * 60000; // dos pasadas: cambio de horario
-  return u + (end ? (hasSec ? 999 : 59999) : 0);
+  return u + (end ? (hasSec ? 1000 : 60000) : 0);
 }
 function rawBound(ms, kind) {
   switch (kind) {
@@ -1970,7 +2009,7 @@ function buildWhere(cols, kinds, f) {
   if (rc && (f.from || f.to)) {
     const lo = localToUtcMs(f.from, false), hi = localToUtcMs(f.to, true);
     if (lo !== null) conds.push(`${qi(rc)} >= ${rawBound(lo, kinds[rc])}`);
-    if (hi !== null) conds.push(`${qi(rc)} <= ${rawBound(hi, kinds[rc])}`);
+    if (hi !== null) conds.push(`${qi(rc)} < ${rawBound(hi, kinds[rc])}`);
   }
   if (f.alerts) { const [c, p] = alertCond(cols, f.cat); conds.push(c); params.push(...p); }
   return [conds.length ? " WHERE " + conds.join(" AND ") : "", params, rc];
@@ -2093,14 +2132,14 @@ async function fmtFor(db, sid, t, f, kind) {
 /* ---------------- Paquete de entrega verificable ----------------
    El ZIP lleva: CSV por tabla, la cadena de custodia en texto, manifest.json (cadena de custodia en formato de máquina) y
    SHA256SUMS.txt con el hash de cada archivo del paquete, verificable con «sha256sum -c SHA256SUMS.txt». */
-const BUILD_ID = "268f327a1b09934d525eac13ca4533a41145e3dd32d62b4335c299cf950abdbd";
+const BUILD_ID = "2d28eb7113fb26106189afdf7a7ec6c6f06457ab887c2e4260d6b4654c429581";
 async function exportZip() {
   const db = cur(); if (!db) return;
-  const t = tz(), entries = [], dbs = db.virtual ? realDbs() : [db], files = [];
+  const t = tz(), entries = [], dbs = db.virtual ? realDbs() : [db], files = new Map();
   const lines = [`Navestigio v3.5.1 · forense de navegadores · compilación ${BUILD_ID.slice(0, 16)}`, `Generado: ${nowLocal()} (${tzLabel(t)})`, `Evidencia: ${db.path}${db.sample ? " (DATOS DE EJEMPLO)" : ""}`,
     "Hashes de la evidencia original (SHA-256 · MD5):", ...dbs.flatMap(d => d.hashes.map(([k, v, m]) => `  ${k}  ${v}  ${m || ""}`))];
   for (const d of dbs) if (d.walInfo) lines.push(`WAL aplicado (${d.label}): ${d.walInfo.commits} transacciones, ${d.walInfo.frames} frames, ${d.walInfo.pages} páginas${d.walInfo.note ? " · " + d.walInfo.note : ""}`);
-  const ir = dbs.flatMap(integrityRows).sort((a, b) => ({Alta: 0, Media: 1}[a[4]] ?? 2) - ({Alta: 0, Media: 1}[b[4]] ?? 2)), sc = scopeInfo();
+  const ir = dbs.flatMap(integrityRows).sort((a, b) => ({Alta: 0, Media: 1}[a[4]] ?? 2) - ({Alta: 0, Media: 1}[b[4]] ?? 2)), sc = scopeInfo(dbs);
   const when = r => r[0] ? (r[1] ? `Desde ${fmt(r[0], "webkit", t)} hasta ${fmt(r[1], "webkit", t)} (${tzLabel(t)})` : `Fecha: ${fmt(r[0], "webkit", t)} (${tzLabel(t)})`) : "";
   lines.push("", "Indicadores de integridad (prioridad · confianza · indicador · detalle · interpretación):",
     ...(ir.length ? ir.map(r => `  [${r[4]} · confianza ${r[5]}] ${r[3]}${db.virtual ? ` (${r[2]})` : ""}. ${r[6]}${r[0] ? " " + when(r) + "." : ""} ${r[7]}`) : ["  Ninguno."]),
@@ -2108,16 +2147,18 @@ async function exportZip() {
   lines.push(...db.notes, `Zona horaria de conversión: ${tzLabel(t)}`, "Las columnas convertidas llevan el sufijo de la zona horaria; la columna cruda se conserva al lado.", "Protección para Excel: las celdas de texto que empiezan por = + - @ llevan un apóstrofo (') inicial para que no se ejecuten como fórmula; los números no se modifican.", "", "Archivo | filas | columnas de fecha (formato)");
   for (const s of db.sources) {
     if (!s.sql) continue;
-    try {
-      const r = await csvFor(db, s.id, t, NOF, sepVal());
-      const fname = (s.kind === "preset" ? "00_vista_" : "") + safe(s.id.slice(2)) + ".csv", kinds = Object.entries(r.kinds).filter(([, k]) => k).map(([c, k]) => `${c}(${k})`).join(", ") || "-";
-      entries.push([fname, r.text]); files.push({archivo: fname, tabla: s.title, filas: r.n, fechas: kinds});
-      lines.push(`${fname} | ${r.n} | ${kinds}`);
-    } catch (e) { if (e.cancelled) return; lines.push(`${s.title}: ERROR ${e.message}`); }
+    const r = await csvFor(db, s.id, t, NOF, sepVal());
+    const base = (s.kind === "preset" ? "00_vista_" : "") + safe(s.id.slice(2));
+    let fname = base + ".csv";
+    for (let i = 2; files.has(fname.toLowerCase()); i++) fname = base + "_" + i + ".csv";
+    const kinds = Object.entries(r.kinds).filter(([, k]) => k).map(([c, k]) => `${c}(${k})`).join(", ") || "-";
+    entries.push([fname, r.text]); files.set(fname.toLowerCase(), {tabla: s.title, filas: r.n, fechas: kinds});
+    lines.push(`${fname} | ${r.n} | ${kinds}`);
   }
   if (db.virtual) for (const [k, ext] of [["jsonl", "jsonl"], ["body", "bodyfile.txt"], ["l2t", "l2t.csv"]]) {
-    try { const r = await fmtFor(db, "s:timeline", t, NOF, k), fname = `linea_de_tiempo.${ext}`; entries.push([fname, r.text]); files.push({archivo: fname, tabla: "Línea de tiempo unificada", filas: r.n, formato: k}); lines.push(`${fname} | ${r.n} | momento`); }
-    catch (e) { if (e.cancelled) return; }
+    const r = await fmtFor(db, "s:timeline", t, NOF, k), fname = `linea_de_tiempo.${ext}`;
+    entries.push([fname, r.text]); files.set(fname, {tabla: "Línea de tiempo unificada", filas: r.n, formato: k});
+    lines.push(`${fname} | ${r.n} | momento`);
   }
   lines.push("", "Verificación: SHA256SUMS.txt trae el SHA-256 de cada archivo de este paquete. En Linux o macOS: sha256sum -c SHA256SUMS.txt. En Windows: certutil -hashfile <archivo> SHA256.");
   entries.push(["LEEME_cadena_custodia.txt", lines.join("\r\n")]);
@@ -2129,7 +2170,7 @@ async function exportZip() {
     herramienta: {nombre: "Navestigio", version: "3.5.1", compilacion: BUILD_ID, sqlite: sqliteVer, navegador: navigator.userAgent},
     generado: {utc: new Date().toISOString(), local: nowLocal(), zona_horaria: tzLabel(t), regla_zona: typeof t === "string" ? "zona IANA, con horario de verano" : "desfase fijo, sin horario de verano"},
     exportacion: {vista: db.virtual ? "Análisis del caso" : db.label, filtros: "ninguno: el ZIP exporta las tablas completas"},
-    evidencias: dbs.map(d => ({nombre: d.label, ruta: d.path, bytes: d.size, datos_de_ejemplo: !!d.sample, tipo: d.json ? "JSON" : "SQLite",
+    evidencias: dbs.map(d => ({id_evidencia: d.origen, nombre: d.label, ruta: d.path, bytes: d.size, datos_de_ejemplo: !!d.sample, tipo: d.json ? "JSON" : "SQLite",
       archivos: d.hashes.map(([k, v, m]) => ({archivo: k, sha256: v, md5: m || null})),
       wal: d.walInfo ? {transacciones: d.walInfo.commits, frames: d.walInfo.frames, paginas: d.walInfo.pages, nota: d.walInfo.note || null} : null, journal_presente: !!d.journal, notas: d.notes})),
     reglas_de_alerta: {sha256: await sha256(enc.encode(RULES_TEXT)), categorias: RULES.map(r => r.name)},
@@ -2137,14 +2178,14 @@ async function exportZip() {
       desde_utc: r[0] ? new Date(toMs(r[0], "webkit")).toISOString() : null, hasta_utc: r[1] ? new Date(toMs(r[1], "webkit")).toISOString() : null})),
     alcance: {analizado: sc.done, no_analizado: sc.not},
     hallazgos_marcados: marksOf(dbs).length,
-    archivos: sums.map(x => ({...x, ...(files.find(f => f.archivo === x.archivo) || {})})),
+    archivos: sums.map(x => ({...x, ...files.get(x.archivo.toLowerCase())})),
     verificacion: "sha256sum -c SHA256SUMS.txt (Linux/macOS) · certutil -hashfile <archivo> SHA256 (Windows)"};
   const mj = JSON.stringify(manifest, null, 2);
   entries.push(["manifest.json", mj]); sums.push({archivo: "manifest.json", sha256: await sha256(enc.encode(mj))});
   entries.push(["SHA256SUMS.txt", sums.map(x => `${x.sha256}  ${x.archivo}`).join("\n") + "\n"]);
   saveFile(`${safe(db.label)}_completo_${tzLabel(t)}.zip`, makeZip(entries));
 }
-function marksOf(dbs) { const shas = new Set(dbs.map(d => d.hashes[0] && d.hashes[0][1])); return MARKS.filter(m => shas.has(m.sha)); }
+function marksOf(dbs) { return MARKS.filter(m => markBelongs(m, dbs)); }
 
 /* ---------------- Interfaz ---------------- */
 function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.remove("hide"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add("hide"), 4500); }
@@ -2279,19 +2320,25 @@ function renderCols() {
    La lista completa va aparte, plegada, para que no tape el hallazgo en el pantallazo. */
 function viewProvenance(db, d) {
   if (!db.virtual) return db.hashes;
-  const ai = d.cols.indexOf("artefacto"), si = d.cols.indexOf("sha256"), seen = new Map(); if (ai < 0) return [];
-  for (const r of d.raws) { const a = r[ai]; if (seen.has(a)) continue; const h = si >= 0 && r[si] ? r[si] : (db.hashes.find(x => x[0] === a) || [])[1]; if (h) seen.set(a, h); }
-  return [...seen];
+  const ai = d.cols.indexOf("artefacto"), si = d.cols.indexOf("sha256"), oi = d.cols.indexOf("id_evidencia");
+  const seen = new Map();
+  if (ai < 0) return [];
+  for (const r of d.raws) {
+    const source = realDbs().find(x => x.origen === r[oi]);
+    const hash = source?.hashes[0][1] || (S.src === "s:hallazgos" && r[si]);
+    if (hash) seen.set(JSON.stringify([r[ai], hash]), [r[ai], hash]);
+  }
+  return [...seen.values()];
 }
 const PROV_MAX = 3;
 function renderCaption() {
   const db = cur(); if (!db) return; const d = S.data;
   const s = db.sources.find(s => s.id === S.src), q = $("q").value;
   const end = Math.min(d.offset + d.rows.length, d.total), cards = findingCards(), shown = viewProvenance(db, d);
-  const hl = ([k, v]) => `<span class="ph">SHA-256 ${esc(k)}: ${v}</span>`;
+  const hl = ([k, v]) => `<span class="ph">SHA-256 ${esc(k)}: ${esc(v)}</span>`;
   const prov = !db.virtual ? `<div class="meta">Evidencia: ${esc(db.path)} · ${db.hashes.map(hl).join(" · ")}</div>`
     : `<div class="meta">Evidencia: ${esc(db.path)} (${db.hashes.length})${cards ? " · el SHA-256 de cada hallazgo va en su tarjeta" : !shown.length ? "" : ` · ${shown.slice(0, PROV_MAX).map(hl).join(" · ")}${shown.length > PROV_MAX ? ` · y ${shown.length - PROV_MAX} más en la procedencia completa` : ""}`}</div>` +
-      (db.hashes.length ? `<details class="prov"><summary>Procedencia completa: ${db.hashes.length} ${db.hashes.length === 1 ? "evidencia abierta" : "evidencias abiertas"} con su SHA-256</summary><table>${db.hashes.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v}</td></tr>`).join("")}</table></details>` : "");
+      (db.hashes.length ? `<details class="prov"><summary>Procedencia completa: ${db.hashes.length} ${db.hashes.length === 1 ? "evidencia abierta" : "evidencias abiertas"} con su SHA-256</summary><table>${db.hashes.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("")}</table></details>` : "");
   $("caption").innerHTML = `<b>${esc(db.label)} › ${esc(s ? s.title : "Consulta SQL")}</b>${db.sample ? ' <span class="tag">ejemplo</span>' : ""}
     ${prov}
     <div class="meta">Fechas en ${tzLabel(tz())} · filas ${d.total ? d.offset + 1 : 0}–${end} de ${d.total}${q ? ` · filtro: «${esc(q)}»` : ""}${(() => { const f = readFilters(); return (f.from || f.to ? ` · ${esc(d.rc)} entre ${esc((f.from || "…").replace("T", " "))} y ${esc((f.to || "…").replace("T", " "))}` : "") + (f.alerts ? (f.cat ? ` · alerta: ${esc(f.cat)}` : " · solo filas con alerta") : ""); })()}${S.sort ? ` · orden: ${esc(S.sort)} ${S.desc ? "desc" : "asc"}` : ""}${db.walInfo && db.walInfo.commits ? " · WAL aplicado" : ""} · generado ${nowLocal()}</div>`;
@@ -2312,7 +2359,7 @@ function renderFindingCards() {
 }
 function setCapture(on) { document.body.classList.toggle("capture", on); $("detail").classList.add("hide"); if (S.data && cur() && S.src !== "s:resumen") renderGrid(); if (on) toast("Modo captura: tome el pantallazo. Esc para salir."); }
 function rowKey(ri) { const db = cur(), d = S.data, s = db.sources.find(s => s.id === S.src);
-  return (db.virtual ? "caso" : db.hashes[0] ? db.hashes[0][1] : db.id) + "|" + (s ? s.title : S.src) + "|" + JSON.stringify(d.raws[ri]); }
+  return (db.virtual ? "caso" : db.origen) + "|" + (s ? s.title : S.src) + "|" + JSON.stringify(d.raws[ri]); }
 function markFor(ri) {
   const d = S.data;
   if (S.src === "s:hallazgos") { const id = d.raws[ri][d.cols.indexOf("id")]; return MARKS.find(m => m.id === id); }
@@ -2323,9 +2370,12 @@ async function addMark(ri) {
   const dc = d.rc || d.cols.find(c => d.kinds[c]); let momento = "";
   if (dc) { const w = toWebkit(d.raws[ri][d.cols.indexOf(dc)], d.kinds[dc]); momento = w === null ? "" : w.toString(); }
   const vis = visibleIdx().filter(i => !(d.columns[i].kind && !d.columns[i].conv));
-  let artefacto = db.sample ? db.label + " (ejemplo)" : db.path, sha = db.hashes[0] ? db.hashes[0][1] : "";
-  if (db.virtual) { const ai = d.cols.indexOf("artefacto"); if (ai >= 0) { artefacto = d.raws[ri][ai]; const h = db.hashes.find(x => x[0] === artefacto); sha = h ? h[1] : (realDbs()[0] && realDbs()[0].hashes[0] ? realDbs()[0].hashes[0][1] : ""); } }
-  const m = {id: Math.random().toString(36).slice(2, 10), key: rowKey(ri), artefacto, sha, fuente: s ? s.title : "Consulta SQL", momento,
+  const row = d.raws[ri], oi = d.cols.indexOf("id_evidencia");
+  const derived = ["s:timeline", "s:recuperados", "s:integridad"].includes(S.src);
+  const source = db.virtual ? derived && realDbs().find(x => x.origen === row[oi]) : db;
+  if (!source) { toast("Esta fila no identifica una evidencia única. Marque la fila en la tabla de origen."); return; }
+  const artefacto = db.virtual ? row[d.cols.indexOf("artefacto")] || artOf(source) : artOf(source);
+  const m = {id: Math.random().toString(36).slice(2, 10), key: rowKey(ri), artefacto, sha: source.hashes[0][1], origen: source.origen, fuente: s ? s.title : "Consulta SQL", momento,
     resumen: vis.map(i => d.rows[ri][i]).filter(v => v !== "").join(" | ").slice(0, 600),
     detalle: d.columns.map((c, i) => `${c.name}: ${d.rows[ri][i]}`).join("\n"), nota: "", marcado: Date.now()};
   MARKS.push(m); saveMarks(); await rebuildFindings(); return m;
@@ -2355,7 +2405,7 @@ function detail(ri) {
   };
   const after = () => { renderSide(); if (S.src === "s:hallazgos") load(); else renderGrid(); };
   if (m) {
-    $("mkSave").onclick = async () => { m.nota = $("mkNote").value; saveMarks(); await rebuildFindings(); toast("Nota guardada"); after(); };
+    $("mkSave").onclick = async () => { m.nota = $("mkNote").value; const saved = saveMarks(); await rebuildFindings(); if (saved) toast("Nota guardada"); after(); };
     $("mkDel").onclick = async () => { await removeMark(m); $("detail").classList.add("hide"); after(); };
   } else $("mkAdd").onclick = async () => { await addMark(ri); after(); detail(ri); };
 }
@@ -2411,7 +2461,7 @@ function showPanel(id) { ["welcome", "view", "conv", "rulesPanel", "summary"].fo
 $("btnClearMarks").onclick = async () => {
   if (!MARKS.length) { toast("No hay hallazgos guardados de las evidencias abiertas."); return; }
   if (!confirm(`¿Borrar ${MARKS.length} ${MARKS.length === 1 ? "hallazgo" : "hallazgos"} de las evidencias abiertas? Exporte antes el caso (ZIP) si los necesita.`)) return;
-  MARKS = []; saveMarks(); await rebuildFindings(); renderSide(); if (S.db) load(); toast("Hallazgos borrados de este navegador"); };
+  MARKS = []; const saved = saveMarks(); await rebuildFindings(); renderSide(); if (S.db) load(); if (saved) toast("Hallazgos borrados de este navegador"); };
 $("btnRules").onclick = () => { $("rules").value = RULES_TEXT; showPanel("rulesPanel"); };
 $("btnCloseRules").onclick = () => showPanel(S.db ? "view" : "welcome");
 $("btnResetRules").onclick = () => { $("rules").value = DEFAULT_RULES; };
@@ -2421,7 +2471,7 @@ $("q").onkeydown = e => { if (e.key === "Enter") { S.offset = 0; load(); } };
 $("limit").onchange = () => { S.offset = 0; load(); };
 $("prev").onclick = () => { const l = Number($("limit").value); if (S.offset - l >= 0) { S.offset -= l; load(); } };
 $("next").onclick = () => { const l = Number($("limit").value); if (S.data && S.offset + l < S.data.total) { S.offset += l; load(); } };
-$("btnCsv").onclick = exportCsv; $("btnZip").onclick = exportZip;
+$("btnCsv").onclick = exportCsv; $("btnZip").onclick = () => exportZip().catch(e => { if (!e.cancelled) toast("No se generó el ZIP: " + e.message); });
 $("btnSql").onclick = () => $("sqlbox").classList.toggle("hide");
 $("btnKinds").onclick = () => $("kinds").classList.toggle("hide");
 $("btnCols").onclick = () => $("colsbar").classList.toggle("hide");
