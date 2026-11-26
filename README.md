@@ -13,13 +13,13 @@ Todo ocurre dentro del navegador: la evidencia no se sube a ningún servidor, no
 Descarga `navestigio-<versión>.zip` desde la sección **Releases** del repositorio y descomprímelo en una carpeta propia (no directamente en Descargas). Compara el SHA-256 con el publicado en esa release. En los comandos siguientes sustituye el nombre del ZIP de ejemplo por el que acabas de descargar:
 
 ```
-certutil -hashfile navestigio-3.5.1.zip SHA256
+certutil -hashfile navestigio-3.6.0.zip SHA256
 ```
 
 Para verificar la autoría de una publicación firmada, descarga el archivo `.minisig` correspondiente al ZIP de esa misma release. Para comprobarla, descarga [minisign](https://github.com/jedisct1/minisign/releases) y ejecuta en la carpeta del zip:
 
 ```
-minisign -Vm navestigio-3.5.1.zip -P RWQ5FXNRNFAh3TWq8+wB/veBbwDpopCZ6pHOmGNZQG0fKIgME7t5q4OZ
+minisign -Vm navestigio-3.6.0.zip -P RWQ5FXNRNFAh3TWq8+wB/veBbwDpopCZ6pHOmGNZQG0fKIgME7t5q4OZ
 ```
 
 Debe responder `Signature and comment signature verified`. Si no, no uses el archivo. La clave pública también está en [`navestigio.pub`](navestigio.pub) y en el sitio.
@@ -186,7 +186,15 @@ Las tablas `urls`, `downloads` y las demás de interés aparecen en negrita en l
 
 ## Búsqueda, SQL y exportación
 
-- **Buscar** filtra por texto en todas las columnas. Para ordenar, haz clic en un encabezado. Para ver el detalle completo de una fila, haz doble clic en ella.
+- **Buscar** filtra por texto en todas las columnas. También admite operadores:
+  - `wetransfer OR drive`: cualquiera de los dos términos.
+  - `mega AND subir`: los dos. Con otros operadores en la búsqueda, dos términos seguidos también se unen con AND.
+  - `NOT google` o `-google`: excluye las filas que contienen el término.
+  - `"inicio de sesión"`: frase exacta, con espacios.
+  - `(mega OR wetransfer) -ads`: los paréntesis agrupan.
+
+  `Y`, `O` y `NO` en mayúsculas también sirven. La prioridad es NOT, luego AND, luego OR. Una búsqueda sin operadores ni comillas busca el texto tal cual, espacios incluidos. La búsqueda por columna (`url:valor`), las comparaciones numéricas y los comodines son de Enterprise.
+- Para ordenar, haz clic en un encabezado. Para ver el detalle completo de una fila, haz doble clic en ella.
 - **SQL** acepta consultas propias de tipo `SELECT` o `WITH`, en solo lectura. Las fechas del resultado también se convierten.
 - **Exportar** descarga la tabla o vista actual con el filtro aplicado, en el formato que elijas al lado del botón:
   - **CSV**: UTF-8 con BOM y `;` como separador, para que Excel en español lo abra bien. Por seguridad, las celdas de texto que empiezan por `=`, `+`, `-` o `@` llevan un apóstrofo inicial: así un título de página malicioso no se ejecuta como fórmula al abrir el CSV. Los números no se modifican.

@@ -894,9 +894,67 @@ function rawBound(ms, kind) {
   return null;
 }
 function pickRangeCol(cols, kinds, wanted) { return kinds[wanted] ? wanted : (cols.find(c => kinds[c]) || ""); }
+/* Búsqueda con operadores básicos: AND, OR, NOT o -término, "frases" y paréntesis (también Y, O, NO, && y ||).
+   La prioridad es NOT, luego AND, luego OR; dos términos seguidos se unen con AND. Una búsqueda sin operadores ni
+   comillas se comporta como siempre: el texto completo, espacios incluidos, en cualquier columna. */
+const SRCH_OPS = {AND: "and", Y: "and", "&&": "and", OR: "or", O: "or", "||": "or", NOT: "not", NO: "not"};
+function srchErr(m) { return new Error("Búsqueda: " + m); }
+function srchTokens(q) {
+  const out = []; let i = 0;
+  while (i < q.length) {
+    const ch = q[i];
+    if (/\s/.test(ch)) { i++; continue; }
+    if (ch === "(" || ch === ")") { out.push({t: ch}); i++; continue; }
+    let neg = false;
+    if (ch === "-" && i + 1 < q.length && !/[\s()]/.test(q[i + 1])) { neg = true; i++; }
+    if (neg) out.push({t: "not"});
+    if (q[i] === '"') {
+      const j = q.indexOf('"', i + 1); if (j < 0) throw srchErr("falta cerrar las comillas.");
+      out.push({t: "term", val: q.slice(i + 1, j), quoted: true}); i = j + 1; continue;
+    }
+    let w = ""; while (i < q.length && !/[\s()]/.test(q[i])) w += q[i++];
+    if (!neg && SRCH_OPS[w]) out.push({t: SRCH_OPS[w], word: w}); else out.push({t: "term", val: w});
+  }
+  return out;
+}
+// ¿La búsqueda usa operadores? Si no, se busca el texto tal cual, como en las versiones anteriores.
+function srchAdvanced(q) {
+  if (!q || !/[\s"()&|-]/.test(q) && !SRCH_OPS[q]) return false;
+  let tk; try { tk = srchTokens(q); } catch (e) { return true; }   // comillas sin cerrar: se informa el error
+  return tk.some(x => x.t !== "term" || x.quoted);
+}
+function srchParse(q) {
+  const tk = srchTokens(q); let p = 0;
+  const peek = () => tk[p];
+  const atom = () => {
+    const x = tk[p++];
+    if (!x) throw srchErr("la búsqueda termina con un operador.");
+    if (x.t === "(") { const e = or(); if (!peek() || peek().t !== ")") throw srchErr("falta cerrar un paréntesis."); p++; return e; }
+    if (x.t === "term") { if (x.val === "") throw srchErr("hay unas comillas vacías."); return x; }
+    if (x.t === ")") throw srchErr("sobra un paréntesis de cierre.");
+    throw srchErr(`«${x.word}» necesita un término a cada lado.`);
+  };
+  const not = () => { if (peek() && peek().t === "not") { p++; return {t: "NOT", a: not()}; } return atom(); };
+  const and = () => { let a = not();
+    while (peek() && ["and", "term", "not", "("].includes(peek().t)) { if (peek().t === "and") p++; a = {t: "AND", a, b: not()}; }
+    return a; };
+  const or = () => { let a = and(); while (peek() && peek().t === "or") { p++; a = {t: "OR", a, b: and()}; } return a; };
+  if (!tk.length) throw srchErr("no hay nada que buscar.");
+  const e = or();
+  if (p < tk.length) throw srchErr(tk[p].t === ")" ? "sobra un paréntesis de cierre." : "revise los operadores.");
+  return e;
+}
+// Condición SQL con parámetros. Cada término va en IFNULL(…, 0) para que NOT funcione con columnas vacías (NULL).
+function srchSql(q, cols) {
+  const params = [];
+  const term = x => { cols.forEach(() => params.push(`%${x.val}%`)); return "IFNULL((" + cols.map(c => `CAST(${qi(c)} AS TEXT) LIKE ?`).join(" OR ") + "), 0)"; };
+  const walk = n => n.t === "term" ? term(n) : n.t === "NOT" ? `NOT (${walk(n.a)})` : `(${walk(n.a)} ${n.t} ${walk(n.b)})`;
+  return [walk(srchParse(q)), params];
+}
 function buildWhere(cols, kinds, f) {
   const conds = [], params = [];
-  if (f.q) { conds.push("(" + cols.map(c => `CAST(${qi(c)} AS TEXT) LIKE ?`).join(" OR ") + ")"); cols.forEach(() => params.push(`%${f.q}%`)); }
+  if (f.q && srchAdvanced(f.q)) { const [c, p] = srchSql(f.q, cols); conds.push(c); params.push(...p); }
+  else if (f.q) { conds.push("(" + cols.map(c => `CAST(${qi(c)} AS TEXT) LIKE ?`).join(" OR ") + ")"); cols.forEach(() => params.push(`%${f.q}%`)); }
   const rc = pickRangeCol(cols, kinds, f.col);
   if (rc && (f.from || f.to)) {
     const lo = localToUtcMs(f.from, false), hi = localToUtcMs(f.to, true);
@@ -1456,7 +1514,7 @@ const TOUR = {
     {id: "marcar", el: () => $("grid").querySelector(".star"), title: "Marque hallazgos",
       text: "La estrella pasa la fila a «Hallazgos marcados». En el detalle de la fila puede agregarle una nota. Los hallazgos viajan en la exportación con su SHA-256."},
     {id: "filtros", el: () => [$("q"), $("fbar")], title: "Busque y filtre",
-      text: "Busque en todas las columnas, limite por rango de fechas y muestre solo las filas con alerta de una categoría."},
+      text: "Busque en todas las columnas (con AND, OR, NOT, \"frases\" y paréntesis si lo necesita), limite por rango de fechas y muestre solo las filas con alerta de una categoría."},
     {id: "exportar", el: () => [$("expFmt"), $("btnCsv"), $("btnZip")], title: "Exporte con hashes",
       text: "Exporte la vista con el filtro aplicado en CSV, JSONL, bodyfile o l2t, o todo en un ZIP con SHA-256, manifiesto y cadena de custodia."},
     {id: "captura", el: () => $("btnCapture"), title: "Modo captura",

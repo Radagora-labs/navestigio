@@ -133,6 +133,19 @@ const sha256 = b => crypto.createHash("sha256").update(b).digest("hex"), md5 = b
     ok((await gridText()).includes("Visita (Safari)"), "las visitas de Safari llegan a la línea de tiempo");
     await page.fill("#q", "wetransfer"); await page.press("#q", "Enter"); await sleep(1200);
     ok((await gridText()).includes("Pestaña cerrada (Firefox)"), "lee sessionstore.jsonlz4 y muestra la pestaña cerrada");
+    // Búsqueda con operadores
+    await page.fill("#q", "wetransfer OR safari3.example.com"); await page.press("#q", "Enter"); await sleep(1200);
+    let g = await gridText();
+    ok(g.includes("Visita (Safari)") && g.includes("Pestaña cerrada (Firefox)"), "OR junta las filas de los dos términos");
+    await page.fill("#q", "(wetransfer OR safari3.example.com) -safari3"); await page.press("#q", "Enter"); await sleep(1200);
+    g = await gridText();
+    ok(g.includes("Pestaña cerrada (Firefox)") && !g.includes("safari3.example.com"), "-término y paréntesis excluyen las filas del término");
+    await page.fill("#q", '"wetransfer.com" AND NOT "no-existe"'); await page.press("#q", "Enter"); await sleep(1200);
+    ok((await gridText()).includes("Pestaña cerrada (Firefox)"), "las frases entre comillas y AND NOT funcionan");
+    await page.fill("#q", "(wetransfer OR mega"); await page.press("#q", "Enter"); await sleep(1200);
+    ok(/falta cerrar un paréntesis/.test(await gridText()), "un paréntesis sin cerrar da un aviso claro");
+    ok(await page.evaluate(() => !srchAdvanced("como borrar") && !srchAdvanced("sitio1.example.com/p") && !srchAdvanced("a-b") && !srchAdvanced("url:x")
+      && srchAdvanced("a OR b") && srchAdvanced("-a") && srchAdvanced('"a b"') && srchAdvanced("(a)")), "sin operadores la búsqueda es la de siempre (texto tal cual)");
     await page.fill("#q", ""); await page.press("#q", "Enter"); await sleep(600);
     await click('.src[data-src="p:chrome_ext"]');
     const ext = await gridText();

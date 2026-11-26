@@ -372,7 +372,7 @@ img.thumb{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin
     <div id="view" class="hide" style="flex:1;min-height:0;display:flex;flex-direction:column">
       <div class="bar">
         <span class="title" id="vtitle"></span>
-        <input id="q" type="search" placeholder="Buscar en todas las columnas…">
+        <input id="q" type="search" placeholder="Buscar en todas las columnas…" title="Admite AND, OR, NOT o -palabra, &quot;frases exactas&quot; y paréntesis. Sin operadores se busca el texto tal cual.">
         <button id="btnSearch" type="button">Buscar</button>
         <select id="expFmt" aria-label="Formato de exportación" title="Formato de la exportación de esta vista"><option value="csv">CSV</option><option value="jsonl">JSONL</option><option value="body">bodyfile (mactime)</option><option value="l2t">l2t CSV (log2timeline)</option></select><button id="btnCsv" type="button" title="Exporta esta vista con el filtro aplicado en el formato elegido">Exportar</button>
         <button id="btnZip" type="button" title="Todas las tablas y vistas convertidas, con hashes">Exportar todo (ZIP)</button>
