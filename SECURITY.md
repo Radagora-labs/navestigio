@@ -35,4 +35,4 @@ También está en [`navestigio.pub`](navestigio.pub). Compruébala con `minisign
 
 ## Versiones con soporte
 
-La versión actual es la 3.5.1. Solo la última versión publicada en Releases recibe correcciones de seguridad.
+La versión actual es la 3.6.0. Solo la última versión publicada en Releases recibe correcciones de seguridad.

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WPTddQSYW0w/CJs1t6PZctTznCTEEjvyLizZZDprwyA=' 'sha256-TFgU+y8FIx548BqvcbPCVrLVy0aqravHr5r22BCE6p4=' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'none'; manifest-src 'self'; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WPTddQSYW0w/CJs1t6PZctTznCTEEjvyLizZZDprwyA=' 'sha256-V7+tsdZZ1hey8eb9ZqOi4IwC7LdVSJjR2unWE8FH/o0=' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src 'none'; manifest-src 'self'; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; object-src 'none'">
 <title>Navestigio</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2312324f%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%2227%22%20r%3D%2217%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%225%22/%3E%3Cline%20x1%3D%2240%22%20y1%3D%2240%22%20x2%3D%2253%22%20y2%3D%2253%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22round%22/%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2234%22%20r%3D%222.4%22%20fill%3D%22%234fd1a1%22/%3E%3Ccircle%20cx%3D%2221.5%22%20cy%3D%2230.5%22%20r%3D%222.8%22%20fill%3D%22%234fd1a1%22/%3E%3Ccircle%20cx%3D%2227%22%20cy%3D%2227.5%22%20r%3D%223.2%22%20fill%3D%22%234fd1a1%22/%3E%3Ccircle%20cx%3D%2233%22%20cy%3D%2222%22%20r%3D%223.7%22%20fill%3D%22%234fd1a1%22/%3E%3C/svg%3E">
 <style>/* Fuentes: Bricolage Grotesque e IBM Plex (SIL OFL 1.1), ver THIRD_PARTY_NOTICES.md */
@@ -351,7 +351,7 @@ img.thumb{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin
 <body>
 
 <header>
-  <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot d1" cx="14" cy="37" r="2.2"/><circle class="dot d2" cx="20.5" cy="32.5" r="2.7"/><circle class="dot d3" cx="27" cy="29" r="3.2"/><circle class="dot d4" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg><h1 class="wordmark"><b>Navestigio</b><small>Forense de navegadores · v3.5.1 · <a href="https://github.com/Radagora-labs/navestigio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title="© 2026 Radagora Labs. Todos los derechos reservados. Uso gratuito según la licencia de Navestigio, sin ninguna garantía. Prohibido modificar o redistribuir.">Licencia</a></small></h1></div>
+  <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><circle class="lens" cx="27" cy="27" r="19"/><path class="trail" d="M14 37 L20.5 32.5 L27 29 L34 22 L40 17"/><circle class="dot d1" cx="14" cy="37" r="2.2"/><circle class="dot d2" cx="20.5" cy="32.5" r="2.7"/><circle class="dot d3" cx="27" cy="29" r="3.2"/><circle class="dot d4" cx="34" cy="22" r="3.8"/><line class="handle" x1="41" y1="41" x2="55" y2="55"/></svg><h1 class="wordmark"><b>Navestigio</b><small>Forense de navegadores · v3.6.0 · <a href="https://github.com/Radagora-labs/navestigio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" title="© 2026 Radagora Labs. Todos los derechos reservados. Uso gratuito según la licencia de Navestigio, sin ninguna garantía. Prohibido modificar o redistribuir.">Licencia</a></small></h1></div>
   <button class="primary" id="btnFiles" type="button">Abrir archivos…</button>
   <button id="btnFolder" type="button" title="Seleccione la carpeta del perfil (ej. …\User Data\Default)">Abrir carpeta de perfil…</button>
   <input id="files" type="file" multiple class="hide">
@@ -377,7 +377,7 @@ img.thumb{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin
     <div id="view" class="hide" style="flex:1;min-height:0;display:flex;flex-direction:column">
       <div class="bar">
         <span class="title" id="vtitle"></span>
-        <input id="q" type="search" placeholder="Buscar en todas las columnas…">
+        <input id="q" type="search" placeholder="Buscar en todas las columnas…" title="Admite AND, OR, NOT o -palabra, &quot;frases exactas&quot; y paréntesis. Sin operadores se busca el texto tal cual.">
         <button id="btnSearch" type="button">Buscar</button>
         <select id="expFmt" aria-label="Formato de exportación" title="Formato de la exportación de esta vista"><option value="csv">CSV</option><option value="jsonl">JSONL</option><option value="body">bodyfile (mactime)</option><option value="l2t">l2t CSV (log2timeline)</option></select><button id="btnCsv" type="button" title="Exporta esta vista con el filtro aplicado en el formato elegido">Exportar</button>
         <button id="btnZip" type="button" title="Todas las tablas y vistas convertidas, con hashes">Exportar todo (ZIP)</button>
@@ -2002,9 +2002,67 @@ function rawBound(ms, kind) {
   return null;
 }
 function pickRangeCol(cols, kinds, wanted) { return kinds[wanted] ? wanted : (cols.find(c => kinds[c]) || ""); }
+/* Búsqueda con operadores básicos: AND, OR, NOT o -término, "frases" y paréntesis (también Y, O, NO, && y ||).
+   La prioridad es NOT, luego AND, luego OR; dos términos seguidos se unen con AND. Una búsqueda sin operadores ni
+   comillas se comporta como siempre: el texto completo, espacios incluidos, en cualquier columna. */
+const SRCH_OPS = {AND: "and", Y: "and", "&&": "and", OR: "or", O: "or", "||": "or", NOT: "not", NO: "not"};
+function srchErr(m) { return new Error("Búsqueda: " + m); }
+function srchTokens(q) {
+  const out = []; let i = 0;
+  while (i < q.length) {
+    const ch = q[i];
+    if (/\s/.test(ch)) { i++; continue; }
+    if (ch === "(" || ch === ")") { out.push({t: ch}); i++; continue; }
+    let neg = false;
+    if (ch === "-" && i + 1 < q.length && !/[\s()]/.test(q[i + 1])) { neg = true; i++; }
+    if (neg) out.push({t: "not"});
+    if (q[i] === '"') {
+      const j = q.indexOf('"', i + 1); if (j < 0) throw srchErr("falta cerrar las comillas.");
+      out.push({t: "term", val: q.slice(i + 1, j), quoted: true}); i = j + 1; continue;
+    }
+    let w = ""; while (i < q.length && !/[\s()]/.test(q[i])) w += q[i++];
+    if (!neg && SRCH_OPS[w]) out.push({t: SRCH_OPS[w], word: w}); else out.push({t: "term", val: w});
+  }
+  return out;
+}
+// ¿La búsqueda usa operadores? Si no, se busca el texto tal cual, como en las versiones anteriores.
+function srchAdvanced(q) {
+  if (!q || !/[\s"()&|-]/.test(q) && !SRCH_OPS[q]) return false;
+  let tk; try { tk = srchTokens(q); } catch (e) { return true; }   // comillas sin cerrar: se informa el error
+  return tk.some(x => x.t !== "term" || x.quoted);
+}
+function srchParse(q) {
+  const tk = srchTokens(q); let p = 0;
+  const peek = () => tk[p];
+  const atom = () => {
+    const x = tk[p++];
+    if (!x) throw srchErr("la búsqueda termina con un operador.");
+    if (x.t === "(") { const e = or(); if (!peek() || peek().t !== ")") throw srchErr("falta cerrar un paréntesis."); p++; return e; }
+    if (x.t === "term") { if (x.val === "") throw srchErr("hay unas comillas vacías."); return x; }
+    if (x.t === ")") throw srchErr("sobra un paréntesis de cierre.");
+    throw srchErr(`«${x.word}» necesita un término a cada lado.`);
+  };
+  const not = () => { if (peek() && peek().t === "not") { p++; return {t: "NOT", a: not()}; } return atom(); };
+  const and = () => { let a = not();
+    while (peek() && ["and", "term", "not", "("].includes(peek().t)) { if (peek().t === "and") p++; a = {t: "AND", a, b: not()}; }
+    return a; };
+  const or = () => { let a = and(); while (peek() && peek().t === "or") { p++; a = {t: "OR", a, b: and()}; } return a; };
+  if (!tk.length) throw srchErr("no hay nada que buscar.");
+  const e = or();
+  if (p < tk.length) throw srchErr(tk[p].t === ")" ? "sobra un paréntesis de cierre." : "revise los operadores.");
+  return e;
+}
+// Condición SQL con parámetros. Cada término va en IFNULL(…, 0) para que NOT funcione con columnas vacías (NULL).
+function srchSql(q, cols) {
+  const params = [];
+  const term = x => { cols.forEach(() => params.push(`%${x.val}%`)); return "IFNULL((" + cols.map(c => `CAST(${qi(c)} AS TEXT) LIKE ?`).join(" OR ") + "), 0)"; };
+  const walk = n => n.t === "term" ? term(n) : n.t === "NOT" ? `NOT (${walk(n.a)})` : `(${walk(n.a)} ${n.t} ${walk(n.b)})`;
+  return [walk(srchParse(q)), params];
+}
 function buildWhere(cols, kinds, f) {
   const conds = [], params = [];
-  if (f.q) { conds.push("(" + cols.map(c => `CAST(${qi(c)} AS TEXT) LIKE ?`).join(" OR ") + ")"); cols.forEach(() => params.push(`%${f.q}%`)); }
+  if (f.q && srchAdvanced(f.q)) { const [c, p] = srchSql(f.q, cols); conds.push(c); params.push(...p); }
+  else if (f.q) { conds.push("(" + cols.map(c => `CAST(${qi(c)} AS TEXT) LIKE ?`).join(" OR ") + ")"); cols.forEach(() => params.push(`%${f.q}%`)); }
   const rc = pickRangeCol(cols, kinds, f.col);
   if (rc && (f.from || f.to)) {
     const lo = localToUtcMs(f.from, false), hi = localToUtcMs(f.to, true);
@@ -2132,11 +2190,11 @@ async function fmtFor(db, sid, t, f, kind) {
 /* ---------------- Paquete de entrega verificable ----------------
    El ZIP lleva: CSV por tabla, la cadena de custodia en texto, manifest.json (cadena de custodia en formato de máquina) y
    SHA256SUMS.txt con el hash de cada archivo del paquete, verificable con «sha256sum -c SHA256SUMS.txt». */
-const BUILD_ID = "2d28eb7113fb26106189afdf7a7ec6c6f06457ab887c2e4260d6b4654c429581";
+const BUILD_ID = "d83bd60fad3728bef1ef5c2a09726a5918921b0d8f5c881c81198ae1dbf7bcdd";
 async function exportZip() {
   const db = cur(); if (!db) return;
   const t = tz(), entries = [], dbs = db.virtual ? realDbs() : [db], files = new Map();
-  const lines = [`Navestigio v3.5.1 · forense de navegadores · compilación ${BUILD_ID.slice(0, 16)}`, `Generado: ${nowLocal()} (${tzLabel(t)})`, `Evidencia: ${db.path}${db.sample ? " (DATOS DE EJEMPLO)" : ""}`,
+  const lines = [`Navestigio v3.6.0 · forense de navegadores · compilación ${BUILD_ID.slice(0, 16)}`, `Generado: ${nowLocal()} (${tzLabel(t)})`, `Evidencia: ${db.path}${db.sample ? " (DATOS DE EJEMPLO)" : ""}`,
     "Hashes de la evidencia original (SHA-256 · MD5):", ...dbs.flatMap(d => d.hashes.map(([k, v, m]) => `  ${k}  ${v}  ${m || ""}`))];
   for (const d of dbs) if (d.walInfo) lines.push(`WAL aplicado (${d.label}): ${d.walInfo.commits} transacciones, ${d.walInfo.frames} frames, ${d.walInfo.pages} páginas${d.walInfo.note ? " · " + d.walInfo.note : ""}`);
   const ir = dbs.flatMap(integrityRows).sort((a, b) => ({Alta: 0, Media: 1}[a[4]] ?? 2) - ({Alta: 0, Media: 1}[b[4]] ?? 2)), sc = scopeInfo(dbs);
@@ -2167,7 +2225,7 @@ async function exportZip() {
   const sums = []; for (const [n, d] of entries) { const b = bytesOf(d); sums.push({archivo: n, bytes: b.length, sha256: await sha256(b)}); }
   const manifest = {
     formato: "navestigio-manifest/1",
-    herramienta: {nombre: "Navestigio", version: "3.5.1", compilacion: BUILD_ID, sqlite: sqliteVer, navegador: navigator.userAgent},
+    herramienta: {nombre: "Navestigio", version: "3.6.0", compilacion: BUILD_ID, sqlite: sqliteVer, navegador: navigator.userAgent},
     generado: {utc: new Date().toISOString(), local: nowLocal(), zona_horaria: tzLabel(t), regla_zona: typeof t === "string" ? "zona IANA, con horario de verano" : "desfase fijo, sin horario de verano"},
     exportacion: {vista: db.virtual ? "Análisis del caso" : db.label, filtros: "ninguno: el ZIP exporta las tablas completas"},
     evidencias: dbs.map(d => ({id_evidencia: d.origen, nombre: d.label, ruta: d.path, bytes: d.size, datos_de_ejemplo: !!d.sample, tipo: d.json ? "JSON" : "SQLite",
@@ -2564,7 +2622,7 @@ const TOUR = {
     {id: "marcar", el: () => $("grid").querySelector(".star"), title: "Marque hallazgos",
       text: "La estrella pasa la fila a «Hallazgos marcados». En el detalle de la fila puede agregarle una nota. Los hallazgos viajan en la exportación con su SHA-256."},
     {id: "filtros", el: () => [$("q"), $("fbar")], title: "Busque y filtre",
-      text: "Busque en todas las columnas, limite por rango de fechas y muestre solo las filas con alerta de una categoría."},
+      text: "Busque en todas las columnas (con AND, OR, NOT, \"frases\" y paréntesis si lo necesita), limite por rango de fechas y muestre solo las filas con alerta de una categoría."},
     {id: "exportar", el: () => [$("expFmt"), $("btnCsv"), $("btnZip")], title: "Exporte con hashes",
       text: "Exporte la vista con el filtro aplicado en CSV, JSONL, bodyfile o l2t, o todo en un ZIP con SHA-256, manifiesto y cadena de custodia."},
     {id: "captura", el: () => $("btnCapture"), title: "Modo captura",
