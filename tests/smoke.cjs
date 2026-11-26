@@ -140,8 +140,9 @@ const sha256 = b => crypto.createHash("sha256").update(b).digest("hex"), md5 = b
     await page.fill("#q", "(wetransfer OR safari3.example.com) -safari3"); await page.press("#q", "Enter"); await sleep(1200);
     g = await gridText();
     // Se compara el host exacto de cada URL de la tabla (no una subcadena del texto)
+    const excluido = new URL("https://safari3.example.com/").hostname;
     const hosts = (g.match(/https?:\/\/[^\s"<>]+/g) || []).map(u => { try { return new URL(u).hostname; } catch (e) { return ""; } });
-    ok(g.includes("Pestaña cerrada (Firefox)") && hosts.length > 0 && !hosts.includes("safari3.example.com"), "-término y paréntesis excluyen las filas del término");
+    ok(g.includes("Pestaña cerrada (Firefox)") && hosts.length > 0 && !hosts.some(h => h === excluido), "-término y paréntesis excluyen las filas del término");
     await page.fill("#q", '"wetransfer.com" AND NOT "no-existe"'); await page.press("#q", "Enter"); await sleep(1200);
     ok((await gridText()).includes("Pestaña cerrada (Firefox)"), "las frases entre comillas y AND NOT funcionan");
     await page.fill("#q", "(wetransfer OR mega"); await page.press("#q", "Enter"); await sleep(1200);
