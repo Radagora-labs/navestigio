@@ -193,7 +193,7 @@ Las tablas `urls`, `downloads` y las demás de interés aparecen en negrita en l
   - `"inicio de sesión"`: frase exacta, con espacios.
   - `(mega OR wetransfer) -ads`: los paréntesis agrupan.
 
-  `Y`, `O` y `NO` en mayúsculas también sirven. La prioridad es NOT, luego AND, luego OR. Una búsqueda sin operadores ni comillas busca el texto tal cual, espacios incluidos. La búsqueda por columna (`url:valor`), las comparaciones numéricas y los comodines son de Enterprise.
+  `Y`, `O` y `NO` en mayúsculas también sirven. La prioridad es NOT, luego AND, luego OR. Una búsqueda sin operadores ni comillas busca el texto tal cual, espacios incluidos. La búsqueda por columna (`url:valor`), las comparaciones numéricas y los comodines son de Enterprise, igual que el marcado en bloque de los resultados filtrados y la exportación del resumen del caso con sus gráficas.
 - Para ordenar, haz clic en un encabezado. Para ver el detalle completo de una fila, haz doble clic en ella.
 - **SQL** acepta consultas propias de tipo `SELECT` o `WITH`, en solo lectura. Las fechas del resultado también se convierten.
 - **Exportar** descarga la tabla o vista actual con el filtro aplicado, en el formato que elijas al lado del botón:
